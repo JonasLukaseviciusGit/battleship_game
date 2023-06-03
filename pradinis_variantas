@@ -101,12 +101,17 @@ def create_board():
     def laivu_lentele():
         laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
         vieta_tekstui = 125
+        button_coords = []
+
+
         x1 = SIZE + tile_size/5
         x2 = SIZE + tile_size/5 + vieta_tekstui
         y1 = tile_size/10 + tile_size
         y2 = tile_size/10 + tile_size * 2
         for laivas in laivai:
-            canvas.create_rectangle(x1+tile_size/5, y1+tile_size/5, x2-tile_size/10, y2-tile_size/10, fill='azure', outline='azure')
+            a, b, c, d = x1+tile_size/5, y1+tile_size/5, x2-tile_size/10, y2-tile_size/10
+            button_coords.append([a, b, c, d])
+            canvas.create_rectangle(a, b, c, d, fill='azure', outline='azure')
             canvas.create_text((x1 + x2)/2, (y1 + y2)/2, text=laivas, font=("Arial", 12), justify="center")
             y1 += tile_size
             y2 += tile_size
@@ -117,27 +122,54 @@ def create_board():
             def __init__(self):
                 self.square_size = 20       # kvadratelio dydis
                 self.dist = 10              # tarpelio tarp kvadratelio dydis
+                self.coordinates = []       # laivus reprezentuojanciu kvadrateliu koordinates
+
             def create_empty_board(self):
                 y1 = tile_size + tile_size/2.25
                 y2 = tile_size + tile_size/2.25 + self.square_size
-
                 j = 1
                 for _ in range(5):
                     x1 = SIZE + vieta_tekstui + tile_size / 2
                     x2 = SIZE + vieta_tekstui + tile_size / 2 + self.square_size
+                    tipas = []      # sarasas tam tikro tipo laivus reprezentuojanciu kvadrateliu koordinatems
                     for i in range(j):
+                        tipas.append([x1, y1, x2, y2])
                         canvas.create_rectangle(x1, y1, x2, y2, fill='white', outline='black')
                         x1 += self.square_size + self.dist
                         x2 += self.square_size + self.dist
+                    self.coordinates.append(tipas)
                     j += 1
                     y1 += tile_size
                     y2 += tile_size
+
+            def get_coordinates(self):
+                return self.coordinates
+
         laivu_info = Laivu_lenta()
         laivu_info.create_empty_board()
 
+        def on_button_hover(event):
+            x = event.x
+            y = event.y
+
+            canvas.delete('pazymeta')
+
+            for button in button_coords:
+                if x > button[0] and x < button[2]:
+                    if y > button[1] and y < button[3]:
+                        x1 = button[0]
+                        y1 = button[1]
+                        x2 = button[2]
+                        y2 = button[3]
+                        canvas.create_rectangle(x1, y1, x2, y2, fill='green', tags='pazymeta')
+
+        canvas.bind("<Motion>", on_button_hover)
+
     laivu_lentele()
 
-    # Start the tkinter event loop
+
+
+        # Start the tkinter event loop
     window.mainloop()
 
 
