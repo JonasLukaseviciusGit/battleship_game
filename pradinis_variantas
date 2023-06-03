@@ -98,6 +98,21 @@ def create_board():
     # Create the centered text
     canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12), justify="center")
 
+    def laivu_lentele():
+        laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
+        vieta_tekstui = 125
+        x1 = SIZE + tile_size/5
+        x2 = SIZE + tile_size/5 + vieta_tekstui
+        y1 = tile_size/10 + tile_size
+        y2 = tile_size/10 + tile_size * 2
+        for laivas in laivai:
+            canvas.create_text((x1 + x2)/2, (y1 + y2)/2, text=laivas, font=("Arial", 12), justify="center")
+            y1 += tile_size
+            y2 += tile_size
+        canvas.create_line(SIZE + tile_size/5 + vieta_tekstui, tile_size*1.2, SIZE + tile_size/5 + vieta_tekstui,
+                           tile_size/10 + tile_size * 6, fill="black", width=1)  # Vertical line 1
+    laivu_lentele()
+
     # Start the tkinter event loop
     window.mainloop()
 
