@@ -106,11 +106,35 @@ def create_board():
         y1 = tile_size/10 + tile_size
         y2 = tile_size/10 + tile_size * 2
         for laivas in laivai:
+            canvas.create_rectangle(x1+tile_size/5, y1+tile_size/5, x2-tile_size/10, y2-tile_size/10, fill='azure', outline='azure')
             canvas.create_text((x1 + x2)/2, (y1 + y2)/2, text=laivas, font=("Arial", 12), justify="center")
             y1 += tile_size
             y2 += tile_size
         canvas.create_line(SIZE + tile_size/5 + vieta_tekstui, tile_size*1.2, SIZE + tile_size/5 + vieta_tekstui,
                            tile_size/10 + tile_size * 6, fill="black", width=1)  # Vertical line 1
+
+        class Laivu_lenta:
+            def __init__(self):
+                self.square_size = 20       # kvadratelio dydis
+                self.dist = 10              # tarpelio tarp kvadratelio dydis
+            def create_empty_board(self):
+                y1 = tile_size + tile_size/2.25
+                y2 = tile_size + tile_size/2.25 + self.square_size
+
+                j = 1
+                for _ in range(5):
+                    x1 = SIZE + vieta_tekstui + tile_size / 2
+                    x2 = SIZE + vieta_tekstui + tile_size / 2 + self.square_size
+                    for i in range(j):
+                        canvas.create_rectangle(x1, y1, x2, y2, fill='white', outline='black')
+                        x1 += self.square_size + self.dist
+                        x2 += self.square_size + self.dist
+                    j += 1
+                    y1 += tile_size
+                    y2 += tile_size
+        laivu_info = Laivu_lenta()
+        laivu_info.create_empty_board()
+
     laivu_lentele()
 
     # Start the tkinter event loop
