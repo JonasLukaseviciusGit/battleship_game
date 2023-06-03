@@ -15,38 +15,6 @@ def create_matrix():
 matrix = create_matrix()
 
 
-def on_tile_click(event):
-    # Calculate the tile indices based on cursor position
-    row = int(event.y / tile_size) - 1
-    col = int(event.x / tile_size) - 1
-
-    # Check if the indices are within the valid range
-    if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
-        x1 = col * tile_size + tile_size
-        y1 = row * tile_size + tile_size
-        x2 = x1 + tile_size
-        y2 = y1 + tile_size
-        canvas.create_rectangle(x1, y1, x2, y2, fill='dark khaki', tags="engine")
-        matrix[row][col] = 1  # Set the value in the matrix to 1 for the clicked tile
-
-
-def on_tile_hover(event):
-    # Calculate the tile indices based on cursor position
-    row = int(event.y / tile_size) - 1
-    col = int(event.x / tile_size) - 1
-
-    # Clear previous green tiles
-    canvas.delete("green_tile")
-
-    # Check if the indices are within the valid range
-    if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
-        x1 = col * tile_size + tile_size
-        y1 = row * tile_size + tile_size
-        x2 = x1 + tile_size
-        y2 = y1 + tile_size
-        canvas.create_rectangle(x1, y1, x2, y2, fill='pale goldenrod', tags="green_tile")
-
-
 def create_board():
     # Create the main window
     window = tk.Tk()
@@ -85,9 +53,6 @@ def create_board():
         x = col * tile_size + tile_size * 1.5
         y = tile_size * 0.5
         canvas.create_text(x, y, text=chr(col + 65), anchor="center")
-
-    # Bind the motion event to change tile color
-    canvas.bind("<Button-1>", on_tile_click)  # Bind the click event
 
     canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)  # Vertical line 1
     canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)  # Vertical line 2
@@ -185,6 +150,44 @@ def create_board():
             on_button_hover(event)
 
         canvas.bind("<Motion>", on_hover)
+
+        def on_button_click(event):
+            x = event.x
+            y = event.y
+
+            canvas.delete('paspaustas')
+
+            for button in button_coords:
+                if x > button[0] and x < button[2]:
+                    if y > button[1] and y < button[3]:
+                        x1 = button[0]
+                        y1 = button[1]
+                        x2 = button[2]
+                        y2 = button[3]
+                        tekstas = button[4]
+                        canvas.create_rectangle(x1, y1, x2, y2, fill='pale goldenrod', outline='pale goldenrod', tags='paspaustas')
+                        canvas.create_text((x1+x2)/2, (y1+y2)/2, text=tekstas, font=("Arial", 12), justify="center", tags='paspaustas')
+
+        def on_tile_click(event):
+            # Calculate the tile indices based on cursor position
+            row = int(event.y / tile_size) - 1
+            col = int(event.x / tile_size) - 1
+
+            # Check if the indices are within the valid range
+            if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+                x1 = col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+                canvas.create_rectangle(x1, y1, x2, y2, fill='dark khaki', tags="engine")
+                matrix[row][col] = 1  # Set the value in the matrix to 1 for the clicked tile
+
+        def on_click(event):
+            on_tile_click(event)
+            on_button_click(event)
+
+        # Bind the motion event to change tile color
+        canvas.bind("<Button-1>", on_click)  # Bind the click event
 
     laivu_lentele()
 
