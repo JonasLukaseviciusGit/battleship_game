@@ -87,7 +87,6 @@ def create_board():
         canvas.create_text(x, y, text=chr(col + 65), anchor="center")
 
     # Bind the motion event to change tile color
-    canvas.bind("<Motion>", on_tile_hover)
     canvas.bind("<Button-1>", on_tile_click)  # Bind the click event
 
     canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)  # Vertical line 1
@@ -110,9 +109,9 @@ def create_board():
         y2 = tile_size/10 + tile_size * 2
         for laivas in laivai:
             a, b, c, d = x1+tile_size/5, y1+tile_size/5, x2-tile_size/10, y2-tile_size/10
-            button_coords.append([a, b, c, d])
             canvas.create_rectangle(a, b, c, d, fill='azure', outline='azure')
             canvas.create_text((x1 + x2)/2, (y1 + y2)/2, text=laivas, font=("Arial", 12), justify="center")
+            button_coords.append([a, b, c, d, laivas])
             y1 += tile_size
             y2 += tile_size
         canvas.create_line(SIZE + tile_size/5 + vieta_tekstui, tile_size*1.2, SIZE + tile_size/5 + vieta_tekstui,
@@ -161,9 +160,31 @@ def create_board():
                         y1 = button[1]
                         x2 = button[2]
                         y2 = button[3]
-                        canvas.create_rectangle(x1, y1, x2, y2, fill='green', tags='pazymeta')
+                        tekstas = button[4]
+                        canvas.create_rectangle(x1, y1, x2, y2, fill='ivory1', outline='ivory1', tags='pazymeta')
+                        canvas.create_text((x1+x2)/2, (y1+y2)/2, text=tekstas, font=("Arial", 12), justify="center", tags='pazymeta')
 
-        canvas.bind("<Motion>", on_button_hover)
+        def on_tile_hover(event):
+            # Calculate the tile indices based on cursor position
+            row = int(event.y / tile_size) - 1
+            col = int(event.x / tile_size) - 1
+
+            # Clear previous green tiles
+            canvas.delete("green_tile")
+
+            # Check if the indices are within the valid range
+            if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+                x1 = col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+                canvas.create_rectangle(x1, y1, x2, y2, fill='pale goldenrod', tags="green_tile")
+
+        def on_hover(event):
+            on_tile_hover(event)
+            on_button_hover(event)
+
+        canvas.bind("<Motion>", on_hover)
 
     laivu_lentele()
 
