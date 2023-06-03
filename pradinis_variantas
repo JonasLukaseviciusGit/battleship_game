@@ -5,6 +5,30 @@ import sys
 SIZE = 700
 DIMENSION = 20
 
+
+def create_matrix():
+    matrix = np.zeros((DIMENSION, DIMENSION), dtype=int)
+    return matrix
+
+
+matrix = create_matrix()
+
+
+def on_tile_click(event):
+    # Calculate the tile indices based on cursor position
+    row = int(event.y / tile_size) - 1
+    col = int(event.x / tile_size) - 1
+
+    # Check if the indices are within the valid range
+    if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+        x1 = col * tile_size + tile_size
+        y1 = row * tile_size + tile_size
+        x2 = x1 + tile_size
+        y2 = y1 + tile_size
+        canvas.create_rectangle(x1, y1, x2, y2, fill='dark khaki', tags="engine")
+        matrix[row][col] = 1  # Set the value in the matrix to 1 for the clicked tile
+
+
 def on_tile_hover(event):
     # Calculate the tile indices based on cursor position
     row = int(event.y / tile_size) - 1
@@ -19,7 +43,7 @@ def on_tile_hover(event):
         y1 = row * tile_size + tile_size
         x2 = x1 + tile_size
         y2 = y1 + tile_size
-        canvas.create_rectangle(x1, y1, x2, y2, fill='green', tags="green_tile")
+        canvas.create_rectangle(x1, y1, x2, y2, fill='pale goldenrod', tags="green_tile")
 
 def create_board():
     # Create the main window
@@ -62,6 +86,7 @@ def create_board():
 
     # Bind the motion event to change tile color
     canvas.bind("<Motion>", on_tile_hover)
+    canvas.bind("<Button-1>", on_tile_click)  # Bind the click event
 
     # Start the tkinter event loop
     window.mainloop()
