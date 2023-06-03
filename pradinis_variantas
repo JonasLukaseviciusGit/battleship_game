@@ -1,9 +1,10 @@
 import tkinter as tk
 import numpy as np
-import sys
 
 SIZE = 700
 DIMENSION = 20
+
+TOTAL_SIZE = 1000
 
 
 def create_matrix():
@@ -45,6 +46,7 @@ def on_tile_hover(event):
         y2 = y1 + tile_size
         canvas.create_rectangle(x1, y1, x2, y2, fill='pale goldenrod', tags="green_tile")
 
+
 def create_board():
     # Create the main window
     window = tk.Tk()
@@ -52,7 +54,7 @@ def create_board():
 
     # Create the canvas
     global canvas
-    canvas = tk.Canvas(window, width=SIZE, height=SIZE)
+    canvas = tk.Canvas(window, width=TOTAL_SIZE, height=SIZE)
     canvas.pack()
 
     global tile_size
@@ -87,6 +89,14 @@ def create_board():
     # Bind the motion event to change tile color
     canvas.bind("<Motion>", on_tile_hover)
     canvas.bind("<Button-1>", on_tile_click)  # Bind the click event
+
+    canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)  # Vertical line 1
+    canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)  # Vertical line 2
+    canvas.create_line(SIZE, tile_size/10, TOTAL_SIZE, tile_size/10, fill="black", width=2)  # Horizontal line 1
+    canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)  # Horizontal line 2
+
+    # Create the centered text
+    canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12), justify="center")
 
     # Start the tkinter event loop
     window.mainloop()
