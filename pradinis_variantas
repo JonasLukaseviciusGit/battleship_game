@@ -145,9 +145,28 @@ def create_board():
                 y2 = y1 + tile_size
                 canvas.create_rectangle(x1, y1, x2, y2, fill='pale goldenrod', tags="green_tile")
 
+        def on_ship_hover(event):
+            x = event.x
+            y = event.y
+            canvas.delete('ship')
+            laivai = laivu_info.get_coordinates()
+            squares = []
+            for type in laivai:
+                for ship in type:
+                    squares.append(ship)
+            for square in squares:
+                if x > square[0] and x < square[2]:
+                    if y > square[1] and y < square[3]:
+                        x1 = square[0]
+                        y1 = square[1]
+                        x2 = square[2]
+                        y2 = square[3]
+                        canvas.create_rectangle(x1, y1, x2, y2, fill='tan1', outline='black', tags='ship')
+
         def on_hover(event):
             on_tile_hover(event)
             on_button_hover(event)
+            on_ship_hover(event)
 
         canvas.bind("<Motion>", on_hover)
 
@@ -155,11 +174,10 @@ def create_board():
             x = event.x
             y = event.y
 
-            canvas.delete('paspaustas')
-
             for button in button_coords:
                 if x > button[0] and x < button[2]:
                     if y > button[1] and y < button[3]:
+                        canvas.delete('paspaustas')
                         x1 = button[0]
                         y1 = button[1]
                         x2 = button[2]
@@ -182,9 +200,28 @@ def create_board():
                 canvas.create_rectangle(x1, y1, x2, y2, fill='dark khaki', tags="engine")
                 matrix[row][col] = 1  # Set the value in the matrix to 1 for the clicked tile
 
+        def on_ship_click(event):
+            x = event.x
+            y = event.y
+
+            laivai = laivu_info.get_coordinates()
+            squares = []
+            for type in laivai:
+                for ship in type:
+                    squares.append(ship)
+            for square in squares:
+                if x > square[0] and x < square[2]:
+                    if y > square[1] and y < square[3]:
+                        canvas.delete('ship_clicked')
+                        x1 = square[0]
+                        y1 = square[1]
+                        x2 = square[2]
+                        y2 = square[3]
+                        canvas.create_rectangle(x1, y1, x2, y2, fill='tan4', outline='black', tags='ship_clicked')
         def on_click(event):
             on_tile_click(event)
             on_button_click(event)
+            on_ship_click(event)
 
         # Bind the motion event to change tile color
         canvas.bind("<Button-1>", on_click)  # Bind the click event
