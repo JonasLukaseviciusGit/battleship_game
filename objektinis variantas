@@ -8,101 +8,85 @@ TOTAL_SIZE = 1000
 
 class Assembly:
     def __init__(self):
-        self.current_ship_type = 0                  # siuo metu statomo laivo tipas (1 - vienmotoris, 5 - penkiamotoris)
-        self.current_ship_engines = 0               # statomo laivo jau esamu varikliu skaicius
-
-        self.current_ship_status = None             # laivo statusas: [0:1] ~ [nepradetas:baigtas]
+        self.current_ship_type = 0
+        self.current_ship_engines = 0
+        self.current_ship_status = None
         if self.current_ship_type + self.current_ship_engines >= 2:
             self.current_ship_status = self.current_ship_engines / self.current_ship_type
 
-        self.buttons_shiptype = [0, 0, 0, 0, 0]     # laivo tipo mygtukai: [penkiamotoriai, keturmotoriai, trimotoriai...
-                                                    # ...dvimotoriai, vienmotoriai]. 0 - išjungtas, 1 - įjungtas
+        self.buttons_shiptype = [0, 0, 0, 0, 0]
+        self.buttons_ships = [[0], [0, 0], [0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0, 0]]
+        self.ships = [[], [], [], [], []]
+        self.matrix = np.zeros((DIMENSION, DIMENSION), dtype=int)
+        self.coords_all = []
+        self.coords_inner = []
+        self.coords_outer = []
+        self.window = None
+        self.canvas = None
 
-        self.buttons_ships = [[0], [0, 0], [0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0, 0]]    #individualus mygtukai...
-                                                    # ...kiekvienam laivui: 1 penkiamotoriui ... 5 vienmotoriams (0/1)
+    def main_board(self):
+        tile_size = SIZE / (DIMENSION + 1)
 
-        self.ships = [[], [], [], [], []]           # laivu koordinaciu sarasas: [0] - penkiamoriai, [4] - vienmotoriai
+        for row in range(DIMENSION):
+            for col in range(DIMENSION):
+                x1 = col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
 
-        self.matrix = np.zeros((DIMENSION, DIMENSION), dtype=int)   #lentos reiksmes sauganti matrica (0/1)
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill='white')
 
-        self.coords_all = []                        # visos uzimtos koordinates
+                self.canvas.create_line(x1, y1, x1, y2, fill="black")
+                self.canvas.create_line(x1, y1, x2, y1, fill="black")
 
-        self.coords_inner = []                      # statomo laivo varikliu koordinates
-        self.coords_outer = []                      # kitu, nei siuo metu statomo, laivu varikliu koordinates
+        for row in range(DIMENSION):
+            x = tile_size * 0.5
+            y = row * tile_size + tile_size * 1.5
+            self.canvas.create_text(x, y, text=str(row + 1), anchor="center")
 
-        self.window = None                          # Tkinter langas
-        self.canvas = None                          # Tkinter lango turinys
+        for col in range(DIMENSION):
+            x = col * tile_size + tile_size * 1.5
+            y = tile_size * 0.5
+            self.canvas.create_text(x, y, text=chr(col + 65), anchor="center")
+
+    def info_board(self):
+        tile_size = SIZE / (DIMENSION + 1)
+        self.canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)
+        self.canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)
+        self.canvas.create_line(SIZE, tile_size / 10, TOTAL_SIZE, tile_size / 10, fill="black", width=2)
+        self.canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)
+
+        self.canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12),
+                           justify="center")
+
+        laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
+        vieta_tekstui = 125
+
+        x1 = SIZE + tile_size / 5
+        x2 = SIZE + tile_size / 5 + vieta_tekstui
+        y1 = tile_size / 10 + tile_size
+        y2 = tile_size / 10 + tile_size * 2
+        for laivas in laivai:
+            a, b, c, d = x1 + tile_size / 5, y1 + tile_size / 5, x2 - tile_size / 10, y2 - tile_size / 10
+            self.canvas.create_rectangle(a, b, c, d, fill='azure', outline='azure')
+            self.canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2, text=laivas, font=("Arial", 12), justify="center")
+            y1 += tile_size
+            y2 += tile_size
+            self.canvas.create_line(SIZE + tile_size / 5 + vieta_tekstui, tile_size * 1.2,
+                               SIZE + tile_size / 5 + vieta_tekstui,
+                               tile_size / 10 + tile_size * 6, fill="black", width=1)
 
     def create_board(self):
-        # Create the main window
         self.window = tk.Tk()
         self.window.title("Tiled Board")
 
-        # Create the canvas
         self.canvas = tk.Canvas(self.window, width=TOTAL_SIZE, height=SIZE)
         self.canvas.pack()
 
-        def main_board():
-            tile_size = SIZE / (DIMENSION + 1)  # Size of each tile in pixels
+        self.main_board()
+        self.info_board()
 
-            # Draw the tiles and lines
-            for row in range(DIMENSION):
-                for col in range(DIMENSION):
-                    x1 = col * tile_size + tile_size
-                    y1 = row * tile_size + tile_size
-                    x2 = x1 + tile_size
-                    y2 = y1 + tile_size
-
-                    self.canvas.create_rectangle(x1, y1, x2, y2, fill='white')
-
-                    # Draw the lines
-                    self.canvas.create_line(x1, y1, x1, y2, fill="black")  # Vertical line
-                    self.canvas.create_line(x1, y1, x2, y1, fill="black")  # Horizontal line
-
-            # Numerate the y-axis with numbers
-            for row in range(DIMENSION):
-                x = tile_size * 0.5
-                y = row * tile_size + tile_size * 1.5
-                self.canvas.create_text(x, y, text=str(row + 1), anchor="center")
-
-            # Numerate the x-axis with letters
-            for col in range(DIMENSION):
-                x = col * tile_size + tile_size * 1.5
-                y = tile_size * 0.5
-                self.canvas.create_text(x, y, text=chr(col + 65), anchor="center")
-        main_board()
-
-        def info_board():
-            tile_size = SIZE / (DIMENSION + 1)  # Size of each tile in pixels
-            self.canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)  # Vertical line 1
-            self.canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)  # Vertical line 2
-            self.canvas.create_line(SIZE, tile_size / 10, TOTAL_SIZE, tile_size / 10, fill="black",
-                               width=2)  # Horizontal line 1
-            self.canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)  # Horizontal line 2
-
-            # Create the centered text
-            self.canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12),
-                               justify="center")
-
-            laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
-            vieta_tekstui = 125
-
-            x1 = SIZE + tile_size / 5
-            x2 = SIZE + tile_size / 5 + vieta_tekstui
-            y1 = tile_size / 10 + tile_size
-            y2 = tile_size / 10 + tile_size * 2
-            for laivas in laivai:
-                a, b, c, d = x1 + tile_size / 5, y1 + tile_size / 5, x2 - tile_size / 10, y2 - tile_size / 10
-                self.canvas.create_rectangle(a, b, c, d, fill='azure', outline='azure')
-                self.canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2, text=laivas, font=("Arial", 12), justify="center")
-                y1 += tile_size
-                y2 += tile_size
-                self.canvas.create_line(SIZE + tile_size / 5 + vieta_tekstui, tile_size * 1.2,
-                                   SIZE + tile_size / 5 + vieta_tekstui,
-                                   tile_size / 10 + tile_size * 6, fill="black", width=1)  # Vertical line 1
-        info_board()
         self.window.mainloop()
-
 
 
 game = Assembly()
