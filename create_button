@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter.font import Font
 
 
-def create_button(x, y, text, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12, default_length=None, default_height=None):
+def create_button(x, y, text=None, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12, default_length=None, default_height=None):
     # Calculate the width and height of the rectangle based on the text size
     font_obj = Font(font=(fontname, fontsize))
     if default_length is None:
