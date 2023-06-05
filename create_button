@@ -28,7 +28,8 @@ def create_button(x, y, text, fill='ivory', outline='ivory4', fontname='Arial', 
     # Create the text inside the rectangle
     canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center")
 
-    return [top_left_x, top_left_y, bottom_right_x, bottom_right_y], text
+    return {'coordinates': [top_left_x, top_left_y, bottom_right_x, bottom_right_y],
+            'text': text, 'fill': fill, 'outline': outline, 'font name': fontname, 'font size': fontsize}
 
 window = tk.Tk()
 
@@ -36,7 +37,7 @@ canvas = tk.Canvas(window, width=500, height=500)
 canvas.pack()
 
 # Example usage of the create_rectangle_with_text() function
-button = create_button(250, 250, text="IUSIDUHID", fill='ivory', outline='green', fontname='Arial', fontsize=10)
+button = create_button(250, 250, text="IUSIDUHID")
 print(button)
 
 window.mainloop()
