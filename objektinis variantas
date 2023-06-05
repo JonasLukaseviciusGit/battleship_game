@@ -29,7 +29,7 @@ class Assembly:
         self.window = None
         self.canvas = None
 
-    def create_button(self, x, y, text, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12,
+    def create_button(self, x, y, text=None, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12,
                       default_length=None, default_height=None):
         # Calculate the width and height of the rectangle based on the text size
         font_obj = Font(font=(fontname, fontsize))
@@ -106,8 +106,15 @@ class Assembly:
 
         x = SIZE + (vieta_tekstui / 2) + 3
         y = tile_size * 1.5
+
+        i = 5
         for laivas in laivai:
             button = self.create_button(x=x, y=y, text=laivas, default_length=110)
+            ax = SIZE + vieta_tekstui + 22
+            for j in range(i):
+                button = self.create_button(x=ax, y=y, outline='black', default_length=9, default_height=9)
+                ax = ax + 20
+            i -= 1
             y += tile_size
 
         self.canvas.create_line(SIZE + tile_size / 5 + vieta_tekstui, tile_size * 1.2,
