@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter.font import Font
 
 
-def create_button(x, y, text=None, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12, default_length=None, default_height=None):
+def create_button(x, y, text=None, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12, default_length=None, default_height=None, default_coordinates=None):
     # Calculate the width and height of the rectangle based on the text size
     font_obj = Font(font=(fontname, fontsize))
     if default_length is None:
@@ -31,7 +31,11 @@ def create_button(x, y, text=None, fill='ivory', outline='ivory4', fontname='Ari
     bottom_right_y = (y + text_height/2) + margins
 
     # Create the rectangle using the calculated coordinates
-    canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y, fill=fill, outline=outline)
+    if default_coordinates is None:
+        canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y, fill=fill, outline=outline)
+    else:
+        x1, y1, x2, y2 = default_coordinates
+        canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline=outline)
     # Create the text inside the rectangle
     canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center")
 
