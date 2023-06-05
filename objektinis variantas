@@ -29,7 +29,8 @@ class Assembly:
         self.window = None
         self.canvas = None
 
-    def create_button(self, x, y, text, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12, default_length=None):
+    def create_button(self, x, y, text, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12,
+                      default_length=None, default_height=None):
         # Calculate the width and height of the rectangle based on the text size
         font_obj = Font(font=(fontname, fontsize))
 
@@ -38,7 +39,10 @@ class Assembly:
         else:
             text_width = default_length
 
-        text_height = font_obj.metrics("linespace")
+        if default_height is None:
+            text_height = font_obj.metrics("linespace")
+        else:
+            text_height = default_height
 
         margins = text_height * 0.25
 
