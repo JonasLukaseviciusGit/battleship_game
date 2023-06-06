@@ -202,7 +202,12 @@ class Assembly:
                 y1 = row * self.tile_size + self.tile_size
                 x2 = x1 + self.tile_size
                 y2 = y1 + self.tile_size
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'], tags="engine")
+                if self.matrix[row, col] == 0:
+                    self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
+                    self.matrix[row, col] = 1
+                else:
+                    self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
+                    self.matrix[row, col] = 0
 
         def on_click(event):
             on_button_click(event)
@@ -223,8 +228,6 @@ class Assembly:
         self.bind()
 
         self.window.mainloop()
-
-
 
 
 game = Assembly()
