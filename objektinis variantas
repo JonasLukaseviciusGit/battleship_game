@@ -1,19 +1,21 @@
 import tkinter as tk
 from tkinter.font import Font
 import numpy as np
+from random import randint
 
 SIZE = 700
 DIMENSION = 20
 
 TOTAL_SIZE = 1000
 
+
 class Assembly:
     def __init__(self):
         self.current_ship_type = 0
-        self.current_ship_engines = 0
+        self.current_ship_engines_num = 0
+        self.current_ship_engines_coords = []
+
         self.current_ship_status = None
-        if self.current_ship_type + self.current_ship_engines >= 2:
-            self.current_ship_status = self.current_ship_engines / self.current_ship_type
 
         self.button_values_shiptype = [0, 0, 0, 0, 0]
         self.button_coords_shiptype = []
@@ -32,13 +34,13 @@ class Assembly:
         self.tile_size = None
 
         self.colors = {
-            'tiles': {'default': 'white', 'hover': 'pale goldenrod', 'clicked': 'dark khaki'},
+            'tiles': {'default': 'white', 'hover': 'pale goldenrod', 'clicked': 'dark khaki', 'ship': 'black'},
             'buttons': {'default': 'khaki', 'hover': 'ivory4', 'on': 'brown'},
             'little_squares': {'default': 'ivory1', 'on': 'pale goldenrod'}
         }
 
     def create_button(self, x, y, text=None, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12,
-                      default_length=None, default_height=None, default_coordinates=None):
+                      default_length=None, default_height=None, default_coordinates=None, remove_after=-1):
         # Calculate the width and height of the rectangle based on the text size
         font_obj = Font(font=(fontname, fontsize))
 
@@ -66,14 +68,24 @@ class Assembly:
         bottom_right_x = int((x + text_width / 2) + margins)
         bottom_right_y = int((y + text_height / 2) + margins)
 
+        id = str(randint(0, 1000000000))
         # Create the rectangle using the calculated coordinates
         if default_coordinates is None:
-            rect = self.canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y, fill=fill, outline=outline)
+            rect = self.canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y,
+                                                fill=fill, outline=outline, tags=id)
         else:
             x1, y1, x2, y2 = default_coordinates
             rect = self.canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline=outline)
         # Create the text inside the rectangle
-        self.canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center")
+        text = self.canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center",
+                                tags=id)
+
+        def delete_button():
+            self.canvas.delete(rect)
+            self.canvas.delete(text)
+
+        if remove_after != -1:
+            self.canvas.after(remove_after, delete_button)
 
         return {'coordinates': [top_left_x, top_left_y, bottom_right_x, bottom_right_y], 'text': text, 'fill': fill,
                 'outline': outline, 'font name': fontname, 'font size': fontsize, 'rect': rect, 'value': 0}
@@ -175,6 +187,7 @@ class Assembly:
         def on_button_click(event):
             x = event.x
             y = event.y
+            ship_type = 6
             for button in self.button_coords_shiptype:
                 x1, y1, x2, y2 = button['coordinates']
                 if x > x1 and x < x2 and y > y1 and y < y2:
@@ -185,19 +198,26 @@ class Assembly:
                                 each['value'] = 0
                         self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['on'])
                         button['value'] = 1
+                        self.current_ship_type = ship_type - 1
+                        print('current_ship_type: ' + str(self.current_ship_type))
                     else:
                         print(button)
                         self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
                         button['value'] = 0
-
+                        self.current_ship_type = 6
+                        print('current_ship_type: ' + str(self.current_ship_type))
+                ship_type -= 1
 
         def on_tile_click(event):
             # Calculate the tile indices based on cursor position
             row = int(event.y / self.tile_size) - 1
             col = int(event.x / self.tile_size) - 1
 
+            if self.current_ship_type == 0:
+                button = self.create_button(SIZE/2, SIZE/2, text='Nustatykite laivo tipa', fontsize=20, remove_after=1000)
+                self.canvas.delete(button)
             # Check if the indices are within the valid range
-            if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+            elif row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
                 x1 = col * self.tile_size + self.tile_size
                 y1 = row * self.tile_size + self.tile_size
                 x2 = x1 + self.tile_size
@@ -205,9 +225,35 @@ class Assembly:
                 if self.matrix[row, col] == 0:
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
                     self.matrix[row, col] = 1
-                else:
+                    self.current_ship_engines_coords.append([row, col])
+                    self.current_ship_engines_num += 1
+                    self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
+                    print('current_ship_engines_num: ' + str(self.current_ship_engines_num))    # #######
+                    print('current_ship_status: ' + str(self.current_ship_status))              # #######
+                    if self.current_ship_status == 1:
+                        for coord in self.current_ship_engines_coords:
+                            row, col = coord
+                            x1 = col * self.tile_size + self.tile_size
+                            y1 = row * self.tile_size + self.tile_size
+                            x2 = x1 + self.tile_size
+                            y2 = y1 + self.tile_size
+                            self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['ship'])
+                            self.matrix[row, col] = self.current_ship_type
+                        self.current_ship_engines_coords = []
+                        self.current_ship_engines_num = 0
+                        self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
+                        print('current_ship_engines_num: ' + str(self.current_ship_engines_num))# #######
+                        print('current_ship_status: ' + str(self.current_ship_status))          # #######
+                elif self.matrix[row, col] == 1:
+                    for coord in self.current_ship_engines_coords:
+                        if coord == [row, col]:
+                            self.current_ship_engines_coords.remove(coord)
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
                     self.matrix[row, col] = 0
+                    self.current_ship_engines_num -= 1
+                    self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
+                    print('current_ship_engines_num: ' + str(self.current_ship_engines_num))    # #######
+                    print('current_ship_status: ' + str(self.current_ship_status))              # #######
 
         def on_click(event):
             on_button_click(event)
