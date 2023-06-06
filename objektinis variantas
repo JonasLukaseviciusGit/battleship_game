@@ -13,7 +13,9 @@ class Assembly:
     def __init__(self):
         self.current_ship_type = 0
         self.current_ship_engines_num = 0
+
         self.current_ship_engines_coords = []
+        self.other_coords = []
 
         self.current_ship_status = None
 
@@ -213,47 +215,84 @@ class Assembly:
             row = int(event.y / self.tile_size) - 1
             col = int(event.x / self.tile_size) - 1
 
+            def check_validity(coord):
+                x, y = coord
+                validity = True
+                if x == 0 or x == DIMENSION:
+                    return {'validity': False, 'message': 'netinkama vieta: lieciama riba'}
+                elif y == 0 or y == DIMENSION:
+                    return {'validity': False, 'message': 'netinkama vieta: lieciama riba'}
+                elif len(self.current_ship_engines_coords) == 0:
+                    validity = True
+                close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
+                cross = [[x-1, y-1], [x+1, y+1], [x-1, y+1], [x+1, y-1]]
+
+                touching = []
+                for coordinate in self.current_ship_engines_coords:
+                    if coordinate in close:
+                        touching.append(1)
+                    else:
+                        touching.append(0)
+                if sum(touching) == 0:
+                    if len(self.current_ship_engines_coords) != 0 and [row, col] not in self.current_ship_engines_coords:
+                        return {'validity': False, 'message': 'netinkama vieta: nelieciamas kitas laivo motoras'}
+
+                for coordinate in self.other_coords:
+                    if coordinate in close+cross:
+                        return {'validity': False, 'message': 'netinkama vieta: lieciamas kitas laivas'}
+                return {'validity': validity, 'message': 'OK'}
+
             if self.current_ship_type == 0:
                 button = self.create_button(SIZE/2, SIZE/2, text='Nustatykite laivo tipa', fontsize=20, remove_after=1000)
                 self.canvas.delete(button)
             # Check if the indices are within the valid range
             elif row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
-                x1 = col * self.tile_size + self.tile_size
-                y1 = row * self.tile_size + self.tile_size
-                x2 = x1 + self.tile_size
-                y2 = y1 + self.tile_size
-                if self.matrix[row, col] == 0:
-                    self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
-                    self.matrix[row, col] = 1
-                    self.current_ship_engines_coords.append([row, col])
-                    self.current_ship_engines_num += 1
-                    self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
-                    print('current_ship_engines_num: ' + str(self.current_ship_engines_num))    # #######
-                    print('current_ship_status: ' + str(self.current_ship_status))              # #######
-                    if self.current_ship_status == 1:
-                        for coord in self.current_ship_engines_coords:
-                            row, col = coord
-                            x1 = col * self.tile_size + self.tile_size
-                            y1 = row * self.tile_size + self.tile_size
-                            x2 = x1 + self.tile_size
-                            y2 = y1 + self.tile_size
-                            self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['ship'])
-                            self.matrix[row, col] = self.current_ship_type
-                        self.current_ship_engines_coords = []
-                        self.current_ship_engines_num = 0
+                validity = check_validity([row, col])
+                print(validity)
+                if validity['validity'] is False:
+                    self.create_button(SIZE/2, SIZE/2, text=validity['message'], fontsize=20, remove_after=1000)
+                else:
+                    x1 = col * self.tile_size + self.tile_size
+                    y1 = row * self.tile_size + self.tile_size
+                    x2 = x1 + self.tile_size
+                    y2 = y1 + self.tile_size
+
+                    if self.matrix[row, col] == 0:
+                        self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
+                        self.matrix[row, col] = 1
+                        self.current_ship_engines_coords.append([row, col])
+                        self.current_ship_engines_num += 1
                         self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
-                        print('current_ship_engines_num: ' + str(self.current_ship_engines_num))# #######
-                        print('current_ship_status: ' + str(self.current_ship_status))          # #######
-                elif self.matrix[row, col] == 1:
-                    for coord in self.current_ship_engines_coords:
-                        if coord == [row, col]:
-                            self.current_ship_engines_coords.remove(coord)
-                    self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
-                    self.matrix[row, col] = 0
-                    self.current_ship_engines_num -= 1
-                    self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
-                    print('current_ship_engines_num: ' + str(self.current_ship_engines_num))    # #######
-                    print('current_ship_status: ' + str(self.current_ship_status))              # #######
+                        print('current_ship_engines_num: ' + str(self.current_ship_engines_num))    # #######
+                        print('current_ship_status: ' + str(self.current_ship_status))              # #######
+                        if self.current_ship_status == 1:
+                            for coord in self.current_ship_engines_coords:
+                                row, col = coord
+                                x1 = col * self.tile_size + self.tile_size
+                                y1 = row * self.tile_size + self.tile_size
+                                x2 = x1 + self.tile_size
+                                y2 = y1 + self.tile_size
+                                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['ship'])
+                                self.matrix[row, col] = self.current_ship_type
+                            for coord in self.current_ship_engines_coords:
+                                self.other_coords.append(coord)
+                            self.current_ship_engines_coords = []
+                            self.current_ship_engines_num = 0
+                            self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
+                            print('current_ship_engines_num: ' + str(self.current_ship_engines_num))# #######
+                            print('current_ship_status: ' + str(self.current_ship_status))          # #######
+                    elif self.matrix[row, col] == 1:
+                        for coord in self.current_ship_engines_coords:
+                            if coord == [row, col]:
+                                self.current_ship_engines_coords.remove(coord)
+                        self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
+                        self.matrix[row, col] = 0
+                        self.current_ship_engines_num -= 1
+                        self.current_ship_status = round(self.current_ship_engines_num / self.current_ship_type, 2)
+                        print('current_ship_engines_num: ' + str(self.current_ship_engines_num))    # #######
+                        print('current_ship_status: ' + str(self.current_ship_status))              # #######
+                    else:
+                        self.create_button(SIZE/2, SIZE/2, text='Vieta negalima', fontsize=20, remove_after=1000)
 
         def on_click(event):
             on_button_click(event)
