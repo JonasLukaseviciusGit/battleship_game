@@ -199,25 +199,26 @@ class Assembly:
         def on_button_click(event):
             x = event.x
             y = event.y
-            ship_type = 6
+            ship_type = 5
             for button in self.buttons_shiptype:
                 x1, y1, x2, y2 = button['coordinates']
                 if x > x1 and x < x2 and y > y1 and y < y2:
-                    if button['value'] == 0:
-                        for each in self.buttons_shiptype:
-                            if each['coordinates'] != button['coordinates']:
-                                self.canvas.itemconfig(each['rect'], fill=self.colors['buttons']['default'])
-                                each['value'] = 0
-                        self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['on'])
-                        button['value'] = 1
-                        self.current_ship_type = ship_type - 1
-                        print('current_ship_type: ' + str(self.current_ship_type))
-                    elif button['value'] == 1:
-                        print(button)
-                        self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
-                        button['value'] = 0
-                        self.current_ship_type = 6
-                        print('current_ship_type: ' + str(self.current_ship_type))
+                    if self.buttons_ship[5-ship_type][-1]['value'] == 0:
+                        if button['value'] == 0:
+                            for each in self.buttons_shiptype:
+                                if each['coordinates'] != button['coordinates']:
+                                    self.canvas.itemconfig(each['rect'], fill=self.colors['buttons']['default'])
+                                    each['value'] = 0
+                            self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['on'])
+                            button['value'] = 1
+                            self.current_ship_type = ship_type
+                            print('current_ship_type: ' + str(self.current_ship_type))
+                        elif button['value'] == 1:
+                            print(button)
+                            self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
+                            button['value'] = 0
+                            self.current_ship_type = 6
+                            print('current_ship_type: ' + str(self.current_ship_type))
                     else:
                         print('this ship type is full')
                 ship_type -= 1
@@ -305,7 +306,7 @@ class Assembly:
                                 print(button_values)
                             print('------------------------------------------')
 
-                            if self.buttons_ship[5 - self.current_ship_type][-1]['value'] == 0:
+                            if self.buttons_ship[5 - self.current_ship_type][-1]['value'] == 1:
                                 print('visi sio tipo laivai pastatyti')
                                 button = self.buttons_shiptype[5 - self.current_ship_type]
                                 rect = button['rect']
