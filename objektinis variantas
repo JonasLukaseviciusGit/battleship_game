@@ -12,23 +12,19 @@ TOTAL_SIZE = 1000
 class Assembly:
     def __init__(self):
         self.current_ship_type = 6
-        self.current_ship_engines_num = 0
+        self.current_ship_engines_coords = []               # siuo metu statomo laivo varikliu koordinates
 
-        self.current_ship_engines_coords = []
-        self.other_coords = []
+        self.other_coords = []                              # visos ankstesniu laivu uzimtos koordinates
 
-        self.ship_coords = [[], [], [], [], []]
+        self.ship_coords = [[], [], [], [], []]             # laivu koordinates pagal tipus [vienmotoriai:penkiamotoriai]
 
         self.current_ship_status = None                     # indikuoja, ar laivas yra pastatytas [0; 1]
 
         self.buttons_shiptype = []                          # laivo tipo mygtukų informacija
         self.buttons_ship = []                              # mazu kvadrateliu informacija
 
-        self.ships = [[], [], [], [], []]
         self.matrix = np.zeros((DIMENSION, DIMENSION), dtype=int)
-        self.coords_all = []
-        self.coords_inner = []
-        self.coords_outer = []
+
         self.window = None
         self.canvas = None
 
@@ -293,7 +289,7 @@ class Assembly:
                                 self.other_coords.append(coord)
                             self.add_ship(self.current_ship_engines_coords)
                             self.current_ship_engines_coords = []
-                            self.current_ship_status = round(len(self.current_ship_engines_coords) / self.current_ship_type, 2)
+                            self.current_ship_status = 0
 
                             for button in self.buttons_ship[5 - self.current_ship_type]:       # pazymimas sekantis kvadratelis eileje
                                 if button['value'] == 0:
