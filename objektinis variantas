@@ -316,14 +316,32 @@ class Assembly:
                             print('current number of engines: ' + str(len(self.current_ship_engines_coords)))# #######
                             print('current_ship_status: ' + str(self.current_ship_status))          # #######
                     elif self.matrix[row, col] == 1:
+                        # **************************
+                                    # tikrinimas, ar galima atsaukti langeli
+                        list_without_coord = self.current_ship_engines_coords[:]
                         for coord in self.current_ship_engines_coords:
                             if coord == [row, col]:
-                                self.current_ship_engines_coords.remove(coord)
-                        self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
-                        self.matrix[row, col] = 0
-                        self.current_ship_status = round(len(self.current_ship_engines_coords) / self.current_ship_type, 2)
-                        print('current number of engines: ' + str(len(self.current_ship_engines_coords)))    # #######
-                        print('current_ship_status: ' + str(self.current_ship_status))              # #######
+                                list_without_coord.remove(coord)
+                        validity_to_remove = True
+                        for coord in list_without_coord:
+                            is_valid = check_validity(coord)['validity']
+                            if is_valid is False:
+                                validity_to_remove = False
+                        # **************************
+                        if validity_to_remove is True:
+                            for coord in self.current_ship_engines_coords:
+                                if coord == [row, col]:
+                                    self.current_ship_engines_coords.remove(coord)
+                            print('coordinate removed')
+                            self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
+                            self.matrix[row, col] = 0
+                            self.current_ship_status = round(len(self.current_ship_engines_coords) / self.current_ship_type, 2)
+                            print('current number of engines: ' + str(len(self.current_ship_engines_coords)))    # #######
+                            print('current_ship_status: ' + str(self.current_ship_status))              # #######
+                        else:
+                            print('coordinate cannot be removed, as it would corrupt ships integrity')
+                        # ************************
+
                     else:
                         self.create_button(SIZE/2, SIZE/2, text='Vieta negalima', fontsize=20, remove_after=1000)
 
