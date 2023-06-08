@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter.font import Font
 import numpy as np
 from random import randint
+import sys
 
 SIZE = 700
 DIMENSION = 20
@@ -206,7 +207,7 @@ class Assembly:
                     if self.buttons_ship[5-ship_type][-1]['value'] == 0:
                         if button['value'] == 0:
                             for each in self.buttons_shiptype:
-                                if each['coordinates'] != button['coordinates']:
+                                if each['coordinates'] != button['coordinates'] and each['value'] != -1:
                                     self.canvas.itemconfig(each['rect'], fill=self.colors['buttons']['default'])
                                     each['value'] = 0
                             self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['on'])
@@ -337,6 +338,17 @@ class Assembly:
                                 self.current_ship_type = 6
                                 button['value'] = -1
 
+                                # tikrinama, ar dar ne visi laivai yra pastatyti
+                                all_ships_are_built = []
+                                for every in self.buttons_shiptype:
+                                    all_ships_are_built.append(every['value'])
+                                print('SHIP STATUS: ' + str(all_ships_are_built))
+                                if 0 not in all_ships_are_built:
+                                    print('###################')
+                                    print('ALL SHIPS ARE BUILT')
+                                    print('###################')
+                                    sys.exit()
+
                             # ----------------------------------------------
                             print('current number of engines: ' + str(len(self.current_ship_engines_coords)))
                             print('current_ship_status: ' + str(self.current_ship_status))
@@ -407,8 +419,8 @@ class Assembly:
                         self.create_button(SIZE/2, SIZE/2, text='Vieta negalima', fontsize=20, remove_after=1000)
 
         def on_click(event):
-            on_button_click(event)
             on_tile_click(event)
+            on_button_click(event)
 
         self.canvas.bind("<Button-1>", on_click)
 
@@ -422,10 +434,15 @@ class Assembly:
         self.main_board()
         self.info_board()
 
-        self.bind()
+        result = self.bind()
 
         self.window.mainloop()
 
+    def return_result(self):
+        return self.ship_coords
+
 
 game = Assembly()
-game.create_board()
+coordinates = game.create_board()
+print('**************************')
+print(coordinates)
