@@ -1,36 +1,47 @@
-import time
-
 coordinates = [
     [1, 2],
+    [6, 2],
     [1, 1],
+    [10, 4],
+    [5, 1],
     [2, 1],
+    [9, 4],
     [3, 2],
+    [7, 2],
     [4, 2],
-    [3, 3]
+    [10, 5],
+    [3, 3],
+    [9, 5],
+    [7, 3],
 ]
 
-def is_close(x, y, coords):
-    close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
-    return [item for item in coords if item in close]
 
 def count_components(coords):
-    components = [0]  # Store components as a list
+    def is_close(x, y, coords):
+        close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
+        return [item for item in coords if item in close]
 
-    def funct(coord, coords):
-        x, y = coord
-        close_ones = is_close(x, y, coords)
-        for close_one in close_ones:
-            if close_one not in tried:
-                tried.append(close_one)
-                funct(close_one, coords)
-        if len(tried) < len(coords):
-            new_coord = [item for item in coords if item not in tried][0]
-            components[0] += 1  # Update components[0]
-            funct(new_coord, coords)
+    def counting_components(coords):
+        def funct(coord, coords, tried):
+            x, y = coord
+            close_ones = is_close(x, y, coords)
+            for close_one in close_ones:
+                if close_one not in tried:
+                    tried.append(close_one)
+                    funct(close_one, coords, tried)
 
-    tried = []
-    funct(coords[0], coords)
-    return components[0]  # Return the updated value
+        components = 0
+        tried = []
+
+        for coord in coords:
+            if coord not in tried:
+                tried.append(coord)
+                funct(coord, coords, tried)
+                components += 1
+
+        return components
+    return counting_components(coords)
+
 
 components = count_components(coordinates)
 print(components)
