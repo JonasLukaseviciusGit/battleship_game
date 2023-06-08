@@ -62,18 +62,13 @@ def build_ships():
             for engine in range(ship_type):     # kiekvienam varikliui
                 coord = make_coord()            # sukuriama koordinate
                 x, y = coord
-                #matrix[x][y] = ship_type        # langelis pazymimas
                 x1, y1, x2, y2 = matrix[x][y]
                 canvas.create_rectangle(x1, y1, x2, y2, fill=spalvos[ship_type-1], outline='black')
-                time.sleep(1)
                 coords_current.append(coord)    # koordinate pridedama prie laivo varikliu koordinaciu saraso
                 i += 1
                 if i == ship_type:                      # jeigu sudedami visi varikliai
                     for coord in coords_current:        # varikliu koordinates pridedamos prie uzimtu koordinaciu saraso
                         coords_all.append(coord)
-                    print('----------------------')
-                    print(matrix)
-                    print('----------------------')
         ship_type += 1
 
 
@@ -109,6 +104,8 @@ def main_board():
         x = col * tile_size + tile_size * 1.5
         y = tile_size * 0.5
         canvas.create_text(x, y, text=chr(col + 65), anchor="center")
+
+    build_ships()
 main_board()
 
 window.mainloop()
