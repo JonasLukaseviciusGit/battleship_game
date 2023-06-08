@@ -1,0 +1,64 @@
+import numpy
+from random import randint
+
+matrix = numpy.zeros((20, 20), dtype=int)
+print(matrix)
+
+laivai = [
+    [],         # vienmotoriai
+    [],         # dvimotoriai
+    [],         # trimotoriai
+    [],         # keturmotoriai
+    []          # penkiamotoriai
+]
+
+
+def check_validity(coordinate):
+    x, y = coordinate
+    close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
+    cross = [[x+1, y+1], [x+1, y-1], [x-1, y+1], [x-1, y-1]]
+    validity = False
+    if len(coords_current) == 0:
+        validity = True
+    else:
+        for coord in close:
+            if coord in coords_current:
+                validity = True
+    for coord in coords_all:
+        if coord in close+cross:
+            validity = False
+    return validity
+
+
+def make_coord():
+    coordinate = None
+    validity = False
+    while validity is False:
+        x = randint(1, 18)
+        y = randint(1, 18)
+        coordinate = (x, y)
+        validity = check_validity(coordinate)
+    return coordinate
+
+ship_type = 1
+coords_all = []
+
+# penkiems laivu tipams
+for _ in range(5): 
+    num_ships = 6-ship_type             # to tipo laivu kiekis
+    for ship in range(num_ships):       # kiekvienam laivui tame kiekyje
+        coords_current = []             # laivo varikliu koordinaciu sarasas
+        i = 0
+        for engine in range(ship_type):     # kiekvienam varikliui
+            coord = make_coord()            # sukuriama koordinate
+            x, y = coord
+            matrix[x][y] = ship_type        # langelis pazymimas
+            coords_current.append(coord)    # koordinate pridedama prie laivo varikliu koordinaciu saraso
+            i += 1
+            if i == ship_type:                      # jeigu sudedami visi varikliai
+                for coord in coords_current:        # varikliu koordinates pridedamos prie uzimtu koordinaciu saraso
+                    coords_all.append(coord)
+                print('----------------------')
+                print(matrix)
+                print('----------------------')
+    ship_type += 1
