@@ -9,42 +9,28 @@ coordinates = [
     [3, 3]
 ]
 
-
 def is_close(x, y, coords):
     close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
     return [item for item in coords if item in close]
 
-
 def count_components(coords):
+    components = [0]  # Store components as a list
+
+    def funct(coord, coords):
+        x, y = coord
+        close_ones = is_close(x, y, coords)
+        for close_one in close_ones:
+            if close_one not in tried:
+                tried.append(close_one)
+                funct(close_one, coords)
+        if len(tried) < len(coords):
+            new_coord = [item for item in coords if item not in tried][0]
+            components[0] += 1  # Update components[0]
+            funct(new_coord, coords)
+
     tried = []
-    components = 0
+    funct(coords[0], coords)
+    return components[0]  # Return the updated value
 
-    while len(tried) < len(coords):
-        arch1 = []
-        arch2 = [item for item in coords if item not in tried][0]
-
-        tried_1 = []
-        arch1_tried1 = []
-        while len(arch2) != 0:
-            s = []
-            x, y = arch2
-            for coord in is_close(x, y, coords):
-                s.append(coord)
-            #s = [list(_) for _ in set(tuple(_) for _ in s)]
-            arch1 = arch2[:]
-            arch1_tried1.append(arch1 + tried_1)
-            arch2 = [item for item in s if item not in arch1_tried1][0]
-            tried_1.append(arch2)
-            print('tried: ' + str(tried))
-            print('arch1_tried1: ' + str(arch1_tried1))
-            print('s: ' + str(s))
-            print('arch1: ' + str(arch1))
-            print('arch2: ' + str(arch2))
-            print('----------')
-            time.sleep(2)
-        tried.append(list(_) for _ in set(tuple(_) for _ in arch1))
-        components += 1
-    return components
-
-
-count_components(coordinates)
+components = count_components(coordinates)
+print(components)
