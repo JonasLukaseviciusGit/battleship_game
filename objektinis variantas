@@ -228,48 +228,61 @@ class Assembly:
             row = int(event.y / self.tile_size) - 1
             col = int(event.x / self.tile_size) - 1
 
+            # -------------------------------------------------------------------------------
             def check_validity(coord):
                 x, y = coord
                 validity = True
-                if x == 0 or x == DIMENSION:
+
+                #tikrinama, ar langelis neliecia lentos krastu
+                if x == 0 or x == DIMENSION-1:
                     return {'validity': False, 'message': 'netinkama vieta: lieciama riba'}
-                elif y == 0 or y == DIMENSION:
+                elif y == 0 or y == DIMENSION-1:
                     return {'validity': False, 'message': 'netinkama vieta: lieciama riba'}
-                elif len(self.current_ship_engines_coords) == 0:
-                    validity = True
+
+                # gretimu langeliu tiesiai ir kryzmai koordinates
                 close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
                 cross = [[x-1, y-1], [x+1, y+1], [x-1, y+1], [x+1, y-1]]
 
                 touching = []
-                for coordinate in self.current_ship_engines_coords:
-                    if coordinate in close:
+                for coordinate in self.current_ship_engines_coords:     # kiekvienai koordinatei statomo laivo sarase
+                    if coordinate in close:                             # jei koordinate yra gretima tiesiai
                         touching.append(1)
                     else:
                         touching.append(0)
-                if sum(touching) == 0:
+
+                if sum(touching) == 0:                                  # jei nera nei vienos koordinates, gretimos tiesiai
+                                                                        # ir jei tai nera pirmasis statomo laivo variklis
+                                                                        # ir jei tai nera kito variklio atsaukimas
                     if len(self.current_ship_engines_coords) != 0 and [row, col] not in self.current_ship_engines_coords:
                         return {'validity': False, 'message': 'netinkama vieta: nelieciamas kitas laivo motoras'}
 
-                for coordinate in self.other_coords:
-                    if coordinate in close+cross:
+                for coordinate in self.other_coords:                    # kiekvienai koordinatei kitu laivu uzimtose koordinatese
+                    if coordinate in close+cross:                       # jei koordinate yra gretima tiesiai arba kryzmai statomo laivo koordinatei
                         return {'validity': False, 'message': 'netinkama vieta: lieciamas kitas laivas'}
-                return {'validity': validity, 'message': 'OK'}
+                return {'validity': validity, 'message': 'OK'}          # jei nei vienas saugiklis nesuveikia, grazinamas signalas OK    *******
+            # -------------------------------------------------------------------------------
 
+            # jei laivo tipas nera nustatytas, vartotojas informuojamas
             if self.current_ship_type == 6:
                 button = self.create_button(SIZE/2, SIZE/2, text='Nustatykite laivo tipa', fontsize=20, remove_after=1000)
                 self.canvas.delete(button)
-            # Check if the indices are within the valid range
+
+            # kitu atveju, jeigu yra paspausta ant lentos
             elif row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+                # tikrinama koorinates (vykdoma funkcija check_validity)
                 validity = check_validity([row, col])
                 print(validity)
+                # jei langelis yra negalimas, vartotojas informuojamas (zinute, kodel langelis negalimas)
                 if validity['validity'] is False:
                     self.create_button(SIZE/2, SIZE/2, text=validity['message'], fontsize=20, remove_after=1000)
+                # kitu atveju, jeigu langelis yra galimas
                 else:
                     x1 = col * self.tile_size + self.tile_size
                     y1 = row * self.tile_size + self.tile_size
                     x2 = x1 + self.tile_size
                     y2 = y1 + self.tile_size
 
+                    # jeigu langelis dar nera uzimtas, jis pazymimas, o koordinates pridedamos prie pradeto statyti laivo
                     if self.matrix[row, col] == 0:
                         self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
                         self.matrix[row, col] = 1
@@ -277,7 +290,10 @@ class Assembly:
                         self.current_ship_status = round(len(self.current_ship_engines_coords) / self.current_ship_type, 2)
                         print('current number of engines: ' + str(len(self.current_ship_engines_coords)))   # #######
                         print('current_ship_status: ' + str(self.current_ship_status))              # #######
+
+                        # jeigu pazymejus langeli buvo baigtas statyti laivas:
                         if self.current_ship_status == 1:
+                            # visi statomo laivo langeliai lentoje pazymimi fiksuoto laivo spalvomis
                             for coord in self.current_ship_engines_coords:
                                 row, col = coord
                                 x1 = col * self.tile_size + self.tile_size
@@ -286,26 +302,33 @@ class Assembly:
                                 y2 = y1 + self.tile_size
                                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['ship'])
                                 self.matrix[row, col] = self.current_ship_type
+                            # statomo laivo koordinates pridedamos prie anksciau statytu laivu koordinaciu saraso
                             for coord in self.current_ship_engines_coords:
                                 self.other_coords.append(coord)
+                            # vykdoma funkcija add_ship: laivo koordinates pridedamos prie atitinkamo saraso pagal tipa ir pazymimas kvadratelis
                             self.add_ship(self.current_ship_engines_coords)
+                            # statomo laivo koordinates ir jo statusas anuliuojami
                             self.current_ship_engines_coords = []
                             self.current_ship_status = 0
 
-                            for button in self.buttons_ship[5 - self.current_ship_type]:       # pazymimas sekantis kvadratelis eileje
+                            # sekantis iki tol nepazymetas kvadratelis igauna reiksme 1
+                            for button in self.buttons_ship[5 - self.current_ship_type]:
                                 if button['value'] == 0:
                                     button['value'] = 1
                                     break
 
                             print('-----------button_coords_ships-------------')
                             # spausdinimas tikrinimui
-                            for type in self.buttons_ship:
+                            for _type in self.buttons_ship:
                                 button_values = []
-                                for button in type:
+                                for button in _type:
                                     button_values.append(button['value'])
                                 print(button_values)
                             print('------------------------------------------')
 
+                            # jei visi to tipo laivai pastatyti:
+                            #   - vartotojas informuojamas
+                            #   - langelis atzymimas (spalva) ir igauna reiksme -1
                             if self.buttons_ship[5 - self.current_ship_type][-1]['value'] == 1:
                                 print('visi sio tipo laivai pastatyti')
                                 button = self.buttons_shiptype[5 - self.current_ship_type]
@@ -313,20 +336,58 @@ class Assembly:
                                 self.canvas.itemconfig(rect, fill=self.colors['buttons']['default'])
                                 self.current_ship_type = 6
                                 button['value'] = -1
-                            print('current number of engines: ' + str(len(self.current_ship_engines_coords)))# #######
-                            print('current_ship_status: ' + str(self.current_ship_status))          # #######
+
+                            # ----------------------------------------------
+                            print('current number of engines: ' + str(len(self.current_ship_engines_coords)))
+                            print('current_ship_status: ' + str(self.current_ship_status))
+                            # ----------------------------------------------
+
+                    # jei langelis yra uzimtas
                     elif self.matrix[row, col] == 1:
                         # **************************
                                     # tikrinimas, ar galima atsaukti langeli
-                        list_without_coord = self.current_ship_engines_coords[:]
-                        for coord in self.current_ship_engines_coords:
+
+                        def count_components(coords):
+                            def is_close(x, y, coords):
+                                close = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]
+                                return [item for item in coords if item in close]
+
+                            def counting_components(coords):
+                                def funct(coord, coords, tried):
+                                    x, y = coord
+                                    close_ones = is_close(x, y, coords)
+                                    for close_one in close_ones:
+                                        if close_one not in tried:
+                                            tried.append(close_one)
+                                            funct(close_one, coords, tried)
+
+                                components = 0
+                                tried = []
+
+                                for coord in coords:
+                                    if coord not in tried:
+                                        tried.append(coord)
+                                        funct(coord, coords, tried)
+                                        components += 1
+
+                                return components
+
+                            return counting_components(coords)
+
+                        coords = self.current_ship_engines_coords[:]
+
+                        # koordinates bandomasis pasalinimas
+                        for coord in coords:
                             if coord == [row, col]:
-                                list_without_coord.remove(coord)
-                        validity_to_remove = True
-                        for coord in list_without_coord:
-                            is_valid = check_validity(coord)['validity']
-                            if is_valid is False:
-                                validity_to_remove = False
+                                coords.remove(coord)
+                        print('******** coordinates *********')
+                        components = count_components(coords)
+
+                        if components == 1 or len(coords) == 0:
+                            validity_to_remove = True
+                        else:
+                            validity_to_remove = False
+
                         # **************************
                         if validity_to_remove is True:
                             for coord in self.current_ship_engines_coords:
