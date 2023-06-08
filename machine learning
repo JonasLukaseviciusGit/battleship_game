@@ -1,1 +1,19 @@
+import numpy as np
 
+rows = 3
+cols = 3
+
+matrix = np.zeros((rows, cols), dtype=int)
+
+
+def turn_matrix_to_list(matrix):
+    new_matrix = []
+    for row in matrix:
+        sublist = []
+        for col in row:
+            sublist.append(col)
+        new_matrix.append(sublist)
+    return new_matrix[:]
+
+matrix = turn_matrix_to_list(matrix)
+print(matrix)
