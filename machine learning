@@ -1,110 +1,49 @@
-import numpy as np
-import random
 import tensorflow as tf
 from board_generator import make_board
+import numpy as np
 
-class BattleshipsEnvironment:
-    def __init__(self):
-        self.board = self.create_board()
-        self.ships = [5, 4, 4, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1]
-        self.ship_positions = {}
+# Load the saved model
+model_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\trained_models\model.h5"
 
-    def create_board(self):
-        return np.zeros((20, 20), dtype=int)
 
-    def place_ships(self):
-        self.board = make_board()
-
-    def is_hit(self, row, col):
-        return self.board[row, col] != 0
-
-    def update_board(self, row, col):
-        if self.is_hit(row, col):
-            ship_size = self.board[row, col]
-            self.board[row, col] = -1  # Mark as hit
-            if ship_size in self.ship_positions:
-                self.ship_positions[ship_size].remove((row, col))
-                if len(self.ship_positions[ship_size]) == 0:
-                    del self.ship_positions[ship_size]
-            return True
-        else:
-            self.board[row, col] = -2  # Mark as miss
-            return False
-
-    def is_game_over(self):
-        return len(self.ship_positions) == 0
-
-    def get_state(self):
-        return self.board.flatten()
-
-    def get_valid_actions(self):
-        valid_actions = []
-        for row in range(20):
-            for col in range(20):
-                if self.board[row, col] >= 0:
-                    valid_actions.append((row, col))
-        return valid_actions
-
-    def step(self, action):
-        row, col = action
-        is_hit = self.update_board(row, col)
-        if is_hit:
-            reward = 1
-        else:
-            reward = -1
-        done = self.is_game_over()
-        return self.get_state(), reward, done
-
+# Define the BattleshipsAgent class
 class BattleshipsAgent:
-    def __init__(self, epsilon=0.1, learning_rate=0.1, discount_factor=0.9):
-        self.epsilon = epsilon
-        self.learning_rate = learning_rate
-        self.discount_factor = discount_factor
-        self.model = self.build_model()
+    def __init__(self):
+        self.model = None
 
-    def build_model(self):
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dense(128, activation='relu', input_shape=(400,)),
-            tf.keras.layers.Dense(128, activation='relu'),
-            tf.keras.layers.Dense(400, activation='linear')
-        ])
-        optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-        model.compile(loss='mse', optimizer=optimizer)
-        return model
+    def load_model(self, model_path):
+        self.model = tf.keras.models.load_model(model_path)
 
-    def get_action(self, state, valid_actions):
-        if np.random.rand() < self.epsilon:
-            return random.choice(valid_actions)
+    def predict(self, board):
+        state = self.preprocess_board(board)
         q_values = self.model.predict(np.array([state]))[0]
-        valid_q_values = [q_values[action[0] * 20 + action[1]] for action in valid_actions]
-        max_q_value = max(valid_q_values)
-        max_q_value_indices = [i for i, q_value in enumerate(valid_q_values) if q_value == max_q_value]
-        return valid_actions[random.choice(max_q_value_indices)]
+        #-------
+        arr = q_values.reshape((20, 20))
+        # Get the index of the maximum value in the array
+        max_index = np.argmax(arr)
 
-    def update_q_values(self, state, action, reward, next_state):
-        target = reward + self.discount_factor * np.amax(self.model.predict(np.array([next_state]))[0])
-        target_vec = self.model.predict(np.array([state]))[0]
-        target_vec[action[0] * 20 + action[1]] = target
-        self.model.fit(np.array([state]), np.array([target_vec]), verbose=0)
+        # Get the coordinate with the highest value
+        coordinate = np.unravel_index(max_index, arr.shape)
+        #------
+        return coordinate
 
-    def train(self, env, num_episodes):
-        for episode in range(num_episodes):
-            env.place_ships()
-            state = env.get_state()
-            done = False
-            while not done:
-                valid_actions = env.get_valid_actions()
-                action = self.get_action(state, valid_actions)
-                next_state, reward, done = env.step(action)
-                self.update_q_values(state, action, reward, next_state)
-                state = next_state
+    def preprocess_board(self, board):
+        # Preprocess the board to match the input shape of the model
+        state = np.array(board).flatten()
+        return state
 
-# Create environment and agent
-env = BattleshipsEnvironment()
+# Load the saved model
 agent = BattleshipsAgent()
+agent.load_model(model_path)
 
-# Train the agent
-agent.train(env, num_episodes=10)
-# Save the trained model
-path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\trained_models\model.h5"
-agent.model.save(path)
+# Define a new board for prediction
+new_board = make_board()
+
+# Make predictions on the new board
+predictions = agent.predict(new_board)
+
+print(new_board)
+# Print the predictions
+print(predictions)
+
+
