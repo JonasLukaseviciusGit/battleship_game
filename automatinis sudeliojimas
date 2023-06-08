@@ -1,8 +1,12 @@
 import numpy
 from random import randint
+import tkinter as tk
+import time
 
-matrix = numpy.zeros((20, 20), dtype=int)
-print(matrix)
+SIZE = 700
+DIMENSION = 20
+
+matrix = [[None] * DIMENSION for _ in range(DIMENSION)]
 
 laivai = [
     [],         # vienmotoriai
@@ -12,24 +16,21 @@ laivai = [
     []          # penkiamotoriai
 ]
 
-
+coords_all = []
 def check_validity(coordinate):
     x, y = coordinate
     close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
     cross = [[x+1, y+1], [x+1, y-1], [x-1, y+1], [x-1, y-1]]
-    validity = False
-    if len(coords_current) == 0:
-        validity = True
-    else:
-        for coord in close:
-            if coord in coords_current:
-                validity = True
-    for coord in coords_all:
-        if coord in close+cross:
-            validity = False
-    return validity
 
+    for coord in close:
+        if coord in coords_all:
+            return False
 
+    for coord in cross:
+        if coord in coords_all:
+            return False
+
+    return True
 def get_valid_coordinates():
     coordinate = None
     validity = False
@@ -41,34 +42,73 @@ def get_valid_coordinates():
             if validity is True:
                 valid.append(coord)
     return valid
-
-
 def make_coord():
     valid_coordinates = get_valid_coordinates()
     print('valid coordinates: ' + str(valid_coordinates))
     index = randint(0, len(valid_coordinates)-1)
     return valid_coordinates[index]
 
+def build_ships():
+    ship_type = 1
+    coords_all = []
 
-ship_type = 1
-coords_all = []
+    spalvos = ['NavajoWhite2', 'NavajoWhite4', 'OliveDrab4', 'DodgerBlue2', 'magenta4']
+    # penkiems laivu tipams
+    for _ in range(5):
+        num_ships = 6-ship_type             # to tipo laivu kiekis
+        for ship in range(num_ships):       # kiekvienam laivui tame kiekyje
+            coords_current = []             # laivo varikliu koordinaciu sarasas
+            i = 0
+            for engine in range(ship_type):     # kiekvienam varikliui
+                coord = make_coord()            # sukuriama koordinate
+                x, y = coord
+                #matrix[x][y] = ship_type        # langelis pazymimas
+                x1, y1, x2, y2 = matrix[x][y]
+                canvas.create_rectangle(x1, y1, x2, y2, fill=spalvos[ship_type-1], outline='black')
+                time.sleep(1)
+                coords_current.append(coord)    # koordinate pridedama prie laivo varikliu koordinaciu saraso
+                i += 1
+                if i == ship_type:                      # jeigu sudedami visi varikliai
+                    for coord in coords_current:        # varikliu koordinates pridedamos prie uzimtu koordinaciu saraso
+                        coords_all.append(coord)
+                    print('----------------------')
+                    print(matrix)
+                    print('----------------------')
+        ship_type += 1
 
-# penkiems laivu tipams
-for _ in range(5):
-    num_ships = 6-ship_type             # to tipo laivu kiekis
-    for ship in range(num_ships):       # kiekvienam laivui tame kiekyje
-        coords_current = []             # laivo varikliu koordinaciu sarasas
-        i = 0
-        for engine in range(ship_type):     # kiekvienam varikliui
-            coord = make_coord()            # sukuriama koordinate
-            x, y = coord
-            matrix[x][y] = ship_type        # langelis pazymimas
-            coords_current.append(coord)    # koordinate pridedama prie laivo varikliu koordinaciu saraso
-            i += 1
-            if i == ship_type:                      # jeigu sudedami visi varikliai
-                for coord in coords_current:        # varikliu koordinates pridedamos prie uzimtu koordinaciu saraso
-                    coords_all.append(coord)
-                print('----------------------')
-                print(matrix)
-                print('----------------------')
-    ship_type += 1
+
+tile_size = SIZE / (DIMENSION + 1)
+
+window = tk.Tk()
+canvas = tk.Canvas(window, width=SIZE, height=SIZE)
+canvas.pack()
+
+
+def main_board():
+    tile_size = SIZE / (DIMENSION + 1)
+    for row in range(DIMENSION):
+        for col in range(DIMENSION):
+            x1 = col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+
+            matrix[row][col] = [x1, y1, x2, y2]
+
+            canvas.create_rectangle(x1, y1, x2, y2, fill='white')
+
+            canvas.create_line(x1, y1, x1, y2, fill="black")
+            canvas.create_line(x1, y1, x2, y1, fill="black")
+
+    for row in range(DIMENSION):
+        x = tile_size * 0.5
+        y = row * tile_size + tile_size * 1.5
+        canvas.create_text(x, y, text=str(row + 1), anchor="center")
+
+    for col in range(DIMENSION):
+        x = col * tile_size + tile_size * 1.5
+        y = tile_size * 0.5
+        canvas.create_text(x, y, text=chr(col + 65), anchor="center")
+main_board()
+
+window.mainloop()
