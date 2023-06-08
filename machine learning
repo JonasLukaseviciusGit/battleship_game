@@ -1,19 +1,23 @@
 import numpy as np
+import pandas as pd
+from board_generator import make_board
 
-rows = 3
-cols = 3
+DIMENSION = 20
+matrix = make_board()
 
-matrix = np.zeros((rows, cols), dtype=int)
+df = pd.DataFrame()
 
+columns = []
+data = []
 
-def turn_matrix_to_list(matrix):
-    new_matrix = []
-    for row in matrix:
-        sublist = []
-        for col in row:
-            sublist.append(col)
-        new_matrix.append(sublist)
-    return new_matrix[:]
+for i in range(matrix.shape[0]):
+    for j in range(matrix.shape[1]):
+        coordinate = f'{i}_{j}'
+        value = matrix[i, j]
+        columns.append(coordinate)
+        data.append(value)
 
-matrix = turn_matrix_to_list(matrix)
-print(matrix)
+data = np.array(data).reshape(-1, len(columns))
+df = pd.concat([df, pd.DataFrame(data, columns=columns)], axis=1)
+
+print(df)
