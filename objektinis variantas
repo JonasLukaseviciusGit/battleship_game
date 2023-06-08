@@ -264,7 +264,7 @@ class Assembly:
             # -------------------------------------------------------------------------------
 
             # jei laivo tipas nera nustatytas, vartotojas informuojamas
-            if self.current_ship_type == 6:
+            if self.current_ship_type == 6 and row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
                 button = self.create_button(SIZE/2, SIZE/2, text='Nustatykite laivo tipa', fontsize=20, remove_after=1000)
                 self.canvas.delete(button)
 
