@@ -9,6 +9,11 @@ DIMENSION = 20
 
 TOTAL_SIZE = 1000
 
+window = tk.Tk()
+window.title("Tiled Board")
+
+canvas = tk.Canvas(window, width=TOTAL_SIZE, height=SIZE)
+canvas.pack()
 
 class Assembly:
     def __init__(self):
@@ -26,9 +31,6 @@ class Assembly:
         self.buttons_ship = []                              # mazu kvadrateliu informacija
 
         self.matrix = np.zeros((DIMENSION, DIMENSION), dtype=int)
-
-        self.window = None
-        self.canvas = None
 
         self.tile_size = None
 
@@ -70,21 +72,21 @@ class Assembly:
         id = str(randint(0, 1000000000))
         # Create the rectangle using the calculated coordinates
         if default_coordinates is None:
-            rect = self.canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y,
+            rect = canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y,
                                                 fill=fill, outline=outline, tags=id)
         else:
             x1, y1, x2, y2 = default_coordinates
-            rect = self.canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline=outline)
+            rect = canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline=outline)
         # Create the text inside the rectangle
-        text = self.canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center",
+        text = canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center",
                                 tags=id)
 
         def delete_button():
-            self.canvas.delete(rect)
-            self.canvas.delete(text)
+            canvas.delete(rect)
+            canvas.delete(text)
 
         if remove_after != -1:
-            self.canvas.after(remove_after, delete_button)
+            canvas.after(remove_after, delete_button)
 
         return {'coordinates': [top_left_x, top_left_y, bottom_right_x, bottom_right_y], 'text': text, 'fill': fill,
                 'outline': outline, 'font name': fontname, 'font size': fontsize, 'rect': rect, 'value': 0}
@@ -95,7 +97,7 @@ class Assembly:
         num_of_ships_this_type = len(self.ship_coords[ship_type-1])
         rect = self.buttons_ship[5 - ship_type][num_of_ships_this_type - 1]
         x1, y1, x2, y2 = rect['coordinates']
-        self.canvas.create_rectangle(x1, y1, x2, y2, fill='brown', outline='black')
+        canvas.create_rectangle(x1, y1, x2, y2, fill='brown', outline='black')
 
     def main_board(self):
         self.tile_size = SIZE / (DIMENSION + 1)
@@ -107,29 +109,29 @@ class Assembly:
                 x2 = x1 + self.tile_size
                 y2 = y1 + self.tile_size
 
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
+                canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
 
-                self.canvas.create_line(x1, y1, x1, y2, fill="black")
-                self.canvas.create_line(x1, y1, x2, y1, fill="black")
+                canvas.create_line(x1, y1, x1, y2, fill="black")
+                canvas.create_line(x1, y1, x2, y1, fill="black")
 
         for row in range(DIMENSION):
             x = self.tile_size * 0.5
             y = row * self.tile_size + self.tile_size * 1.5
-            self.canvas.create_text(x, y, text=str(row + 1), anchor="center")
+            canvas.create_text(x, y, text=str(row + 1), anchor="center")
 
         for col in range(DIMENSION):
             x = col * self.tile_size + self.tile_size * 1.5
             y = self.tile_size * 0.5
-            self.canvas.create_text(x, y, text=chr(col + 65), anchor="center")
+            canvas.create_text(x, y, text=chr(col + 65), anchor="center")
 
     def info_board(self):
         self.tile_size = SIZE / (DIMENSION + 1)
-        self.canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)
-        self.canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)
-        self.canvas.create_line(SIZE, self.tile_size / 10, TOTAL_SIZE, self.tile_size / 10, fill="black", width=2)
-        self.canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)
+        canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)
+        canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)
+        canvas.create_line(SIZE, self.tile_size / 10, TOTAL_SIZE, self.tile_size / 10, fill="black", width=2)
+        canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)
 
-        self.canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (self.tile_size / 2), text="YOUR SHIPS", font=("Arial", 12),
+        canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (self.tile_size / 2), text="YOUR SHIPS", font=("Arial", 12),
                            justify="center")
 
         laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
@@ -152,7 +154,7 @@ class Assembly:
             i += 1
             y += self.tile_size
 
-        self.canvas.create_line(SIZE + self.tile_size / 5 + vieta_tekstui, self.tile_size * 1.2,
+        canvas.create_line(SIZE + self.tile_size / 5 + vieta_tekstui, self.tile_size * 1.2,
                                 SIZE + self.tile_size / 5 + vieta_tekstui, self.tile_size / 10 +
                                 self.tile_size * 6, fill="black", width=1)
 
@@ -164,9 +166,9 @@ class Assembly:
                 x1, y1, x2, y2 = button['coordinates']
                 if button['value'] == 0:
                     if x > x1 and x < x2 and y > y1 and y < y2:
-                        self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['hover'])
+                        canvas.itemconfig(button['rect'], fill=self.colors['buttons']['hover'])
                     else:
-                        self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
+                        canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
 
         def on_tile_hover(event):
             # Calculate the tile indices based on cursor position
@@ -174,7 +176,7 @@ class Assembly:
             col = int(event.x / self.tile_size) - 1
 
             # Clear previous green tiles
-            self.canvas.delete("tile")
+            canvas.delete("tile")
 
             # Check if the indices are within the valid range
             if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
@@ -182,13 +184,13 @@ class Assembly:
                 y1 = row * self.tile_size + self.tile_size
                 x2 = x1 + self.tile_size
                 y2 = y1 + self.tile_size
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['hover'], tags="tile")
+                canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['hover'], tags="tile")
 
         def on_hover(event):
             on_button_hover(event)
             on_tile_hover(event)
 
-        self.canvas.bind("<Motion>", on_hover)
+        canvas.bind("<Motion>", on_hover)
 
         def on_button_click(event):
             x = event.x
@@ -201,13 +203,13 @@ class Assembly:
                         if button['value'] == 0:
                             for each in self.buttons_shiptype:
                                 if each['coordinates'] != button['coordinates'] and each['value'] != -1:
-                                    self.canvas.itemconfig(each['rect'], fill=self.colors['buttons']['default'])
+                                    canvas.itemconfig(each['rect'], fill=self.colors['buttons']['default'])
                                     each['value'] = 0
-                            self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['on'])
+                            canvas.itemconfig(button['rect'], fill=self.colors['buttons']['on'])
                             button['value'] = 1
                             self.current_ship_type = ship_type
                         elif button['value'] == 1:
-                            self.canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
+                            canvas.itemconfig(button['rect'], fill=self.colors['buttons']['default'])
                             button['value'] = 0
                             self.current_ship_type = 6
                 ship_type -= 1
@@ -254,7 +256,7 @@ class Assembly:
             # jei laivo tipas nera nustatytas, vartotojas informuojamas
             if self.current_ship_type == 6 and row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
                 button = self.create_button(SIZE/2, SIZE/2, text='Nustatykite laivo tipa', fontsize=20, remove_after=1000)
-                self.canvas.delete(button)
+                canvas.delete(button)
 
             # kitu atveju, jeigu yra paspausta ant lentos
             elif row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
@@ -272,7 +274,7 @@ class Assembly:
 
                     # jeigu langelis dar nera uzimtas, jis pazymimas, o koordinates pridedamos prie pradeto statyti laivo
                     if self.matrix[row, col] == 0:
-                        self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
+                        canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['clicked'])
                         self.matrix[row, col] = 1
                         self.current_ship_engines_coords.append([row, col])
                         self.current_ship_status = round(len(self.current_ship_engines_coords) / self.current_ship_type, 2)
@@ -286,7 +288,7 @@ class Assembly:
                                 y1 = row * self.tile_size + self.tile_size
                                 x2 = x1 + self.tile_size
                                 y2 = y1 + self.tile_size
-                                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['ship'])
+                                canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['ship'])
                                 self.matrix[row, col] = self.current_ship_type
                             # statomo laivo koordinates pridedamos prie anksciau statytu laivu koordinaciu saraso
                             for coord in self.current_ship_engines_coords:
@@ -309,7 +311,7 @@ class Assembly:
                             if self.buttons_ship[5 - self.current_ship_type][-1]['value'] == 1:
                                 button = self.buttons_shiptype[5 - self.current_ship_type]
                                 rect = button['rect']
-                                self.canvas.itemconfig(rect, fill=self.colors['buttons']['default'])
+                                canvas.itemconfig(rect, fill=self.colors['buttons']['default'])
                                 self.current_ship_type = 6
                                 button['value'] = -1
 
@@ -373,7 +375,7 @@ class Assembly:
                             for coord in self.current_ship_engines_coords:
                                 if coord == [row, col]:
                                     self.current_ship_engines_coords.remove(coord)
-                            self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
+                            canvas.create_rectangle(x1, y1, x2, y2, fill=self.colors['tiles']['default'])
                             self.matrix[row, col] = 0
                             self.current_ship_status = round(len(self.current_ship_engines_coords) / self.current_ship_type, 2)
                         else:
@@ -387,25 +389,15 @@ class Assembly:
             on_tile_click(event)
             on_button_click(event)
 
-        self.canvas.bind("<Button-1>", on_click)
+        canvas.bind("<Button-1>", on_click)
 
     def create_board(self):
-        self.window = tk.Tk()
-        self.window.title("Tiled Board")
-
-        self.canvas = tk.Canvas(self.window, width=TOTAL_SIZE, height=SIZE)
-        self.canvas.pack()
-
         self.main_board()
         self.info_board()
 
         self.bind()
 
-        self.window.mainloop()
-        return self.result
-
 
 game = Assembly()
-coordinates = game.create_board()
-print('**************************')
-print(coordinates)
+game.create_board()
+window.mainloop()
