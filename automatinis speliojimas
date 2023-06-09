@@ -1,46 +1,117 @@
-from board_generator import make_board
 import numpy as np
-import random
+from random import randint
+import tkinter as tk
+import time
+from board_generator import make_board
+from guess_function import make_a_guess
+import sys
 
-real_board = make_board()
-my_board = np.zeros((20, 20), dtype=int)
+DIMENSION = 20
+
+matrix = make_board()
+
+guess_board = np.zeros((DIMENSION, DIMENSION), dtype=int)
 
 
-def make_a_guess(current_ship_coords):
-    potential_ones = []
-    if len(current_ship_coords) == 0:
-        potential_ones = np.argwhere(my_board == 0)
-        return random.choice(potential_ones)
-    for coord in current_ship_coords:
-        x, y = coord
-        close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
-        for close_one in close:
-            x1, y1 = close_one
-            if my_board[x1][y1] == 0:
-                potential_ones.append(close_one)
-    clean = []
-    for potential in potential_ones:
-        if potential not in clean:
-            clean.append(potential)
-    return random.choice(clean)
+def main_board():
+    SIZE = 700
 
-current_ship_coords = []
-engines_left = 35
+    tile_size = SIZE / (DIMENSION + 1)
 
-while engines_left != 0:
-    if len(current_ship_coords) == 0:
-        guess = make_a_guess()
-        x, y = guess
-        if real_board[x][y] != 0:
-            current_ship_coords.append(guess)
-            my_board[x][y] = real_board[x][y]
-            engines_left -= 1
-    if len(current_ship_coords) != 0:
-        x, y = current_ship_coords[0]
-        value = real_board[x][y]
-        if value == 0:
-            current_ship_coords = []
-        else:
-            while len(current_ship_coords) < value:
-                make_a_guess()
-print('DONE')
+    window = tk.Tk()
+    canvas = tk.Canvas(window, width=SIZE, height=SIZE)
+    canvas.pack()
+    tile_size = SIZE / (DIMENSION + 1)
+    for row in range(DIMENSION):
+        for col in range(DIMENSION):
+            x1 = col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+
+            canvas.create_rectangle(x1, y1, x2, y2, fill='white')
+
+            canvas.create_line(x1, y1, x1, y2, fill="black")
+            canvas.create_line(x1, y1, x2, y1, fill="black")
+
+    for row in range(DIMENSION):
+        x = tile_size * 0.5
+        y = row * tile_size + tile_size * 1.5
+        canvas.create_text(x, y, text=str(row), anchor="center")
+
+    for col in range(DIMENSION):
+        x = col * tile_size + tile_size * 1.5
+        y = tile_size * 0.5
+        canvas.create_text(x, y, text=str(col), anchor="center")
+
+    # langeliu zymejimas
+    for row in range(DIMENSION):
+        for col in range(DIMENSION):
+            colors = ['firebrick1', 'Turquoise2', 'aquamarine4', 'OliveDrab2', 'purple1']
+            value = matrix[row][col]
+            if matrix[row][col] != 0:
+                x1 = col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+                canvas.create_rectangle(x1, y1, x2, y2, fill=colors[value-1])
+
+    def mark_board(row, col):
+        x1 = col * tile_size + tile_size
+        y1 = row * tile_size + tile_size
+        x2 = x1 + tile_size
+        y2 = y1 + tile_size
+        canvas.create_text((x1+x2)/2, (y1+y2)/2, text='X', anchor='center', font=15)
+
+    def guess_and_mark(current_ship_coords, engines_left):
+        # Jeigu dar nera pataikyta ant laivo
+        if len(current_ship_coords) == 0:
+            guess = make_a_guess(current_ship_coords, guess_board)      # Daromas spejimas
+            print(guess)    # ----------------
+            x, y = guess
+            mark_board(x, y)
+            # Jeigu pataikoma i laiva, spejimas pridedamas prie laivo koordinaciu
+            if matrix[x][y] != 0:
+                current_ship_coords.append(guess)
+                guess_board[x][y] = matrix[x][y]    # motoro reiksme pridedama i guess board
+                engines_left -= 1
+        # Jeigu jau yra pataikyta ant laivo
+        if len(current_ship_coords) != 0:
+            x, y = current_ship_coords[0]
+            value = matrix[x][y]                    # gaunamas laivo tipas
+            # Jeigu laivas vienmotoris, sarasas anuliuojamas, nes laivas jau pasautas
+            if value == 1:
+                current_ship_coords = []
+            # Jeigu laivas nera vienmotoris:
+            else:
+                print('Oh shit')
+                # Tol, kol nesurenkami visi motorai
+                i = 0
+                while len(current_ship_coords) < value:
+                    print('Aah, I got stuck in a loop')
+                    # Daromi spejimai
+                    guess = make_a_guess(current_ship_coords, guess_board)
+                    if guess != 0:
+                        current_ship_coords.append(guess)       # *****bandymas neuzloopinti
+                    print(guess)  # ----------------
+                    x, y = guess
+                    mark_board(x, y)
+                    i += 1
+                    if i == 10:
+                        sys.exit()
+                # Surinkus visus motorus sarasas anulioujamas, nes laivas pasautas
+                current_ship_coords = []
+
+        if engines_left != 0:
+            window.after(1000, guess_and_mark, current_ship_coords, engines_left)  # Delay of 1 second (1000 milliseconds)
+
+    current_ship_coords = []
+    engines_left = 35
+
+    print('START')
+    guess_and_mark(current_ship_coords, engines_left)  # Start the guessing process
+
+    window.mainloop()
+
+
+main_board()
