@@ -1,0 +1,46 @@
+from board_generator import make_board
+import numpy as np
+import random
+
+real_board = make_board()
+my_board = np.zeros((20, 20), dtype=int)
+
+
+def make_a_guess(current_ship_coords):
+    potential_ones = []
+    if len(current_ship_coords) == 0:
+        potential_ones = np.argwhere(my_board == 0)
+        return random.choice(potential_ones)
+    for coord in current_ship_coords:
+        x, y = coord
+        close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
+        for close_one in close:
+            x1, y1 = close_one
+            if my_board[x1][y1] == 0:
+                potential_ones.append(close_one)
+    clean = []
+    for potential in potential_ones:
+        if potential not in clean:
+            clean.append(potential)
+    return random.choice(clean)
+
+current_ship_coords = []
+engines_left = 35
+
+while engines_left != 0:
+    if len(current_ship_coords) == 0:
+        guess = make_a_guess()
+        x, y = guess
+        if real_board[x][y] != 0:
+            current_ship_coords.append(guess)
+            my_board[x][y] = real_board[x][y]
+            engines_left -= 1
+    if len(current_ship_coords) != 0:
+        x, y = current_ship_coords[0]
+        value = real_board[x][y]
+        if value == 0:
+            current_ship_coords = []
+        else:
+            while len(current_ship_coords) < value:
+                make_a_guess()
+print('DONE')
