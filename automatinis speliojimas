@@ -80,41 +80,46 @@ class Agent:
         self.canvas.create_text((x1+x2)/2, (y1+y2)/2, text='X', anchor='center', font=15)
 
     def make_a_guess(self):
-        guess = None
+        def action(coordinate):
+            x, y = coordinate
+            if self.real_board[x][y] == 0:
+                self.visible_board[x][y] = -1
+            else:
+                self.visible_board[x][y] = self.real_board[x][y]
+                self.current_ship_coordinates.append(coordinate)
+                self.score += 1
+            self.coordinates_not_tried.remove(coordinate)
+            self.mark_board(x, y)
+
         if len(self.current_ship_coordinates) == 0:
             coordinate = random.choice(self.coordinates_not_tried)
-            print(coordinate)
-            self.coordinates_not_tried.remove(coordinate)
-            guess = coordinate[:]
-        elif len(self.current_ship_coordinates) == 1:
-            self.current_ship_coordinates = []
+            action(coordinate)
         else:
-            row, col = self.current_ship_coordinates[0]
-            ship_type = self.real_board[row][col]
-            if len(self.current_ship_coordinates) < ship_type:
+            x, y = self.current_ship_coordinates[0]
+            value = self.real_board[x][y]
+            if len(self.current_ship_coordinates) == 1 and value == 1:
+                self.current_ship_coordinates = []
+                coordinate = random.choice(self.coordinates_not_tried)
+                action(coordinate)
+            elif len(self.current_ship_coordinates) == value:
+                print('visi motorai pasauti')
+                self.current_ship_coordinates = []
+                coordinate = random.choice(self.coordinates_not_tried)
+                action(coordinate)
+            else:
+                potential = []
                 for coordinate in self.current_ship_coordinates:
                     x, y = coordinate
-                    close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
-                    potential = []
+                    close = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
                     for close_one in close:
-                        if close_one in self.coordinates_not_tried:
-                            potential.append(close_one)
-                    guess = random.choice(potential)
-            else:
-                self.current_ship_coordinates = []
-        x, y = guess
-        self.coordinates_not_tried.remove(guess)
-        value = self.real_board[x][y]
-        if value == 0:
-            self.visible_board[x][y] = -1
-        else:
-            self.visible_board[x][y] = value
-            self.current_ship_coordinates.append(guess)
-            self.score += 1
-        self.mark_board(x, y)
-
+                        if close_one not in self.current_ship_coordinates:
+                            if close_one in self.coordinates_not_tried:
+                                potential.append(close_one)
+                print('potential: ' + str(potential))
+                coordinate = random.choice(potential)
+                action(coordinate)
         if self.score < 35:
-            self.window.after(1000, self.make_a_guess)
+            self.window.after(100, self.make_a_guess)
 
     def run(self):
         self.create_real_board()
