@@ -1,0 +1,50 @@
+from board_generator import make_board
+import tkinter as tk
+import numpy as np
+
+SIZE = 700
+TOTAL_SIZE = 1000
+
+window = tk.Tk()
+canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
+canvas.pack()
+
+def playground():
+    dimension = 20
+    size = TOTAL_SIZE/2
+    tile_size = size / dimension * 0.95
+
+    canvas.create_line(TOTAL_SIZE/2, 0, TOTAL_SIZE/2, size, fill='black', width=2)     # vidurine vertikale
+    canvas.create_line(3, 0, 3, size, fill='black', width=2)                           # kaire vertikale
+    canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, size, fill='black', width=2)         # desine vertikale
+    canvas.create_line(0, 3, TOTAL_SIZE, 3, fill='black', width=2)                     # virsutine horizontale
+    canvas.create_line(0, size, TOTAL_SIZE, size, fill='black', width=2)               # apatine horizontale
+
+    def little_board(xx):
+        for row in range(dimension):
+            for col in range(dimension):
+                x1 = xx + col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+
+                canvas.create_rectangle(x1, y1, x2, y2, fill='white')
+
+                canvas.create_line(x1, y1, x1, y2, fill="black")
+                canvas.create_line(x1, y1, x2, y1, fill="black")
+
+            for row in range(dimension):
+                x = xx + tile_size * 0.5
+                y = row * tile_size + tile_size * 1.5
+                canvas.create_text(x, y, text=str(row), anchor="center")
+
+            for col in range(dimension):
+                x = xx + col * tile_size + tile_size * 1.5
+                y = tile_size * 0.5
+                canvas.create_text(x, y, text=str(col), anchor="center")
+    little_board(0)
+    little_board(size)
+
+playground()
+
+window.mainloop()
