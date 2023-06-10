@@ -1,196 +1,421 @@
-from board_generator import make_board
 import tkinter as tk
+from tkinter.font import Font
 import numpy as np
-import random
+from random import randint
+import sys
+from C1 import playground
+from board_generator import make_board
 
 SIZE = 700
+DIMENSION = 20
+
 TOTAL_SIZE = 1000
-dimension = 20
 
 window = tk.Tk()
-canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
+window.title("Tiled Board")
+
+canvas = tk.Canvas(window, width=TOTAL_SIZE, height=SIZE)
 canvas.pack()
 
-my_board = make_board()
-opponent_board = make_board()
-
-# ######################################
-print('opponent_board')
-print(opponent_board)
-print('my_board')
-print(my_board)
 
 
-def playground(canvas):
-    global my_score, opponent_score
-    global current_ship_coordinates, current_ship_type
-    dimension = 20
+def assembly():
+    global current_ship_type, current_ship_engines_coords, other_coords, ship_coords, current_ship_status
+    global buttons_shiptype, buttons_ship, matrix, tile_size, colors
 
-    visible_board_for_me = np.zeros((dimension, dimension), dtype=int)
-    visible_board_for_opponent = np.zeros((dimension, dimension), dtype=int)  # speliojimo algoritmui zymetis
-    coordinates_not_tried = [[row, col] for row in range(dimension) for col in range(dimension)]      # speliojimo algoritmui
-    current_ship_coordinates = []
-    current_ship_type = None
+    result = None
 
-    total = 35
-    my_score = 0
-    opponent_score = 0
+    current_ship_type = 6
+    current_ship_engines_coords = []               # siuo metu statomo laivo varikliu koordinates
 
-    size = TOTAL_SIZE / 2
-    tile_size = size / dimension * 0.95
+    other_coords = []                              # visos ankstesniu laivu uzimtos koordinates
 
-    def creating_board_graphics():
-        canvas.create_line(TOTAL_SIZE/2, 0, TOTAL_SIZE/2, size, fill='black', width=2)     # vidurine vertikale
-        canvas.create_line(3, 0, 3, size, fill='black', width=2)                           # kaire vertikale
-        canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, size, fill='black', width=2)         # desine vertikale
-        canvas.create_line(0, 3, TOTAL_SIZE, 3, fill='black', width=2)                     # virsutine horizontale
-        canvas.create_line(0, size, TOTAL_SIZE, size, fill='black', width=2)               # apatine horizontale
+    ship_coords = [[], [], [], [], []]             # laivu koordinates pagal tipus [vienmotoriai:penkiamotoriai]
 
-        # Zaidejo ir oponento lentu zymes
-        canvas.create_rectangle(size/2-100, size+5, size/2+100, size+35, fill='ivory')
-        canvas.create_text(size/2, size+20, text="opponent's board", font=15)
-        canvas.create_rectangle(size + size / 2 - 100, size+5, size + size / 2 + 100, size + 35, fill='ivory')
-        canvas.create_text(size + size/2, size + 20, text="your board", font=15)
+    current_ship_status = None                     # indikuoja, ar laivas yra pastatytas [0; 1]
 
-        def little_board(xx):
-            for row in range(dimension):
-                for col in range(dimension):
-                    x1 = xx + col * tile_size + tile_size
-                    y1 = row * tile_size + tile_size
-                    x2 = x1 + tile_size
-                    y2 = y1 + tile_size
+    buttons_shiptype = []                          # laivo tipo mygtukų informacija
+    buttons_ship = []                              # mazu kvadrateliu informacija
 
-                    canvas.create_rectangle(x1, y1, x2, y2, fill='white')
+    matrix = np.zeros((DIMENSION, DIMENSION), dtype=int)
 
-                    canvas.create_line(x1, y1, x1, y2, fill="black")
-                    canvas.create_line(x1, y1, x2, y1, fill="black")
+    tile_size = SIZE / (DIMENSION + 1)
 
-                for row in range(dimension):
-                    x = xx + tile_size * 0.5
-                    y = row * tile_size + tile_size * 1.5
-                    canvas.create_text(x, y, text=str(row), anchor="center")
+    colors = {
+            'tiles': {'default': 'white', 'hover': 'pale goldenrod', 'clicked': 'dark khaki', 'ship': 'black'},
+            'buttons': {'default': 'khaki', 'hover': 'ivory4', 'on': 'brown'},
+            'little_squares': {'default': 'ivory1', 'on': 'pale goldenrod'}
+    }
 
-                for col in range(dimension):
-                    x = xx + col * tile_size + tile_size * 1.5
-                    y = tile_size * 0.5
-                    canvas.create_text(x, y, text=str(col), anchor="center")
+    def create_button(x, y, text=None, fill='ivory', outline='ivory4', fontname='Arial', fontsize=12,
+                      default_length=None, default_height=None, default_coordinates=None, remove_after=-1):
+        # Calculate the width and height of the rectangle based on the text size
+        font_obj = Font(font=(fontname, fontsize))
 
-        little_board(0)
-        little_board(size)
-
-        def mark_the_board(board, xx=None):
-            for row in range(dimension):
-                for col in range(dimension):
-                    x1 = xx + col * tile_size + tile_size
-                    y1 = row * tile_size + tile_size
-                    x2 = x1 + tile_size
-                    y2 = y1 + tile_size
-
-                    colors = ['firebrick1', 'Turquoise2', 'aquamarine4', 'OliveDrab2', 'purple1']
-                    value = board[row][col]
-                    if value != 0:
-                        canvas.create_rectangle(x1, y1, x2, y2, fill=colors[value - 1])
-        mark_the_board(my_board, xx=size)
-    creating_board_graphics()
-
-    def on_hover(event):
-        # Calculate the tile indices based on cursor position
-        row = int(event.y / tile_size) - 1
-        col = int(event.x / tile_size) - 1
-
-        #print(f'size: {int(size)}; row: {row}; col {col}')
-
-        # Clear previous green tiles
-        canvas.delete("tile")
-
-        # Check if the indices are within the valid range
-        if row >= 0 and row < dimension and col >= 0 and col < dimension:
-            x1 = col * tile_size + tile_size
-            y1 = row * tile_size + tile_size
-            x2 = x1 + tile_size
-            y2 = y1 + tile_size
-            canvas.create_rectangle(x1, y1, x2, y2, fill='khaki2', tags="tile")
-
-    def make_a_guess():
-        global current_ship_coordinates, coordinate
-        coordinate = None
-
-        def action(coordinate):
-            global current_ship_coordinates, my_score
-            x, y = coordinate
-            if my_board[x][y] == 0:
-                visible_board_for_opponent[x][y] = -1
-            else:
-                visible_board_for_opponent[x][y] = my_board[x][y]
-                current_ship_coordinates.append(coordinate)
-                my_score += 1
-            coordinates_not_tried.remove(coordinate)
-            return coordinate
-
-        if len(current_ship_coordinates) == 0:
-            coordinate = random.choice(coordinates_not_tried)
-            coordinate = action(coordinate)
+        if default_length is None:
+            text_width = font_obj.measure(text)
         else:
-            x, y = current_ship_coordinates[0]
-            value = my_board[x][y]
-            if len(current_ship_coordinates) == 1 and value == 1:
-                current_ship_coordinates = []
-                coordinate = random.choice(coordinates_not_tried)
-                coordinate = action(coordinate)
-            elif len(current_ship_coordinates) == value:
-                print('visi motorai pasauti')
-                current_ship_coordinates = []
-                coordinate = random.choice(coordinates_not_tried)
-                coordinate = action(coordinate)
-            else:
-                potential = []
-                for coordinate in current_ship_coordinates:
-                    x, y = coordinate
-                    close = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
-                    for close_one in close:
-                        if close_one not in current_ship_coordinates:
-                            if close_one in coordinates_not_tried:
-                                potential.append(close_one)
-                print('potential: ' + str(potential))
-                coordinate = random.choice(potential)
-                coordinate = action(coordinate)
-        return coordinate
+            text_width = default_length
 
-    def on_click(event):
-        global my_score, current_ship_coordinates
-        # Calculate the tile indices based on cursor position
-        row = int(event.y / tile_size) - 1
-        col = int(event.x / tile_size) - 1
+        if default_height is None:
+            text_height = font_obj.metrics("linespace")
+        else:
+            text_height = default_height
 
-        def opponents_guess():
-            row, col = make_a_guess()
-            x1 = size + col * tile_size + tile_size
-            y1 = row * tile_size + tile_size
-            x2 = x1 + tile_size
-            y2 = y1 + tile_size
-            canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', font=15, text='X')
+        margins = text_height * 0.25
 
-        # Check if the indices are within the valid range
-        if row >= 0 and row < dimension and col >= 0 and col < dimension:
-            x1 = col * tile_size + tile_size
-            y1 = row * tile_size + tile_size
-            x2 = x1 + tile_size
-            y2 = y1 + tile_size
+        # Calculate the coordinates of the top-left corner for text coordinates
+        top_left_x = (x - text_width / 2)
+        top_left_y = (y - text_height / 2)
 
-            if visible_board_for_me[row][col] == 0:
-                value = opponent_board[row][col]
-                if value == 0:
-                    canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
-                    visible_board_for_me[row][col] = -1
+        text_coords = (top_left_x + text_width / 2, top_left_y + text_height / 2)
+
+        # Calculate the coordinates of the four corners of the rectangle
+        top_left_x = int((x - text_width / 2) - margins)
+        top_left_y = int((y - text_height / 2) - margins)
+        bottom_right_x = int((x + text_width / 2) + margins)
+        bottom_right_y = int((y + text_height / 2) + margins)
+
+        id = str(randint(0, 1000000000))
+        # Create the rectangle using the calculated coordinates
+        if default_coordinates is None:
+            rect = canvas.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y,
+                                                fill=fill, outline=outline, tags=id)
+        else:
+            x1, y1, x2, y2 = default_coordinates
+            rect = canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline=outline)
+        # Create the text inside the rectangle
+        text = canvas.create_text(text_coords, text=text, font=(fontname, fontsize), fill="black", justify="center",
+                                tags=id)
+
+        def delete_button():
+            canvas.delete(rect)
+            canvas.delete(text)
+
+        if remove_after != -1:
+            canvas.after(remove_after, delete_button)
+
+        return {'coordinates': [top_left_x, top_left_y, bottom_right_x, bottom_right_y], 'text': text, 'fill': fill,
+                'outline': outline, 'font name': fontname, 'font size': fontsize, 'rect': rect, 'value': 0}
+
+    def add_ship(coords_list):
+        ship_type = len(coords_list)
+        ship_coords[ship_type-1].append(coords_list)
+        num_of_ships_this_type = len(ship_coords[ship_type-1])
+        rect = buttons_ship[5 - ship_type][num_of_ships_this_type - 1]
+        x1, y1, x2, y2 = rect['coordinates']
+        canvas.create_rectangle(x1, y1, x2, y2, fill='brown', outline='black')
+
+    def main_board():
+        for row in range(DIMENSION):
+            for col in range(DIMENSION):
+                x1 = col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+
+                canvas.create_rectangle(x1, y1, x2, y2, fill=colors['tiles']['default'])
+
+                canvas.create_line(x1, y1, x1, y2, fill="black")
+                canvas.create_line(x1, y1, x2, y1, fill="black")
+
+        for row in range(DIMENSION):
+            x = tile_size * 0.5
+            y = row * tile_size + tile_size * 1.5
+            canvas.create_text(x, y, text=str(row + 1), anchor="center")
+
+        for col in range(DIMENSION):
+            x = col * tile_size + tile_size * 1.5
+            y = tile_size * 0.5
+            canvas.create_text(x, y, text=chr(col + 65), anchor="center")
+
+    def info_board():
+        tile_size = SIZE / (DIMENSION + 1)
+        canvas.create_line(SIZE, 0, SIZE, SIZE, fill="black", width=2)
+        canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, SIZE, fill="black", width=2)
+        canvas.create_line(SIZE, tile_size / 10, TOTAL_SIZE, tile_size / 10, fill="black", width=2)
+        canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)
+
+        canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12),
+                           justify="center")
+
+        laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
+        vieta_tekstui = 125
+
+        x = SIZE + (vieta_tekstui / 2) + 3
+        y = tile_size * 1.5
+
+        i = 1
+        for laivas in laivai:
+            button = create_button(x=x, y=y, text=laivas, fill=colors['buttons']['default'], default_length=110)
+            buttons_shiptype.append(button)
+            ax = SIZE + vieta_tekstui + 22
+            ship_buttons_list = []              # informacija mazu kvadraciuku, reprezentuojanciu tam tikra tipa
+            for j in range(i):
+                ship_buttons_list.append(create_button(x=ax, y=y, fill=colors['little_squares']['default'],
+                                                            outline='black', default_length=9, default_height=9))
+                ax = ax + 20
+            buttons_ship.append(ship_buttons_list)
+            i += 1
+            y += tile_size
+
+        canvas.create_line(SIZE + tile_size / 5 + vieta_tekstui, tile_size * 1.2,
+                                SIZE + tile_size / 5 + vieta_tekstui, tile_size / 10 +
+                                tile_size * 6, fill="black", width=1)
+
+    def bind():
+        def on_button_hover(event):
+            x = event.x
+            y = event.y
+            for button in buttons_shiptype:
+                x1, y1, x2, y2 = button['coordinates']
+                if button['value'] == 0:
+                    if x > x1 and x < x2 and y > y1 and y < y2:
+                        canvas.itemconfig(button['rect'], fill=colors['buttons']['hover'])
+                    else:
+                        canvas.itemconfig(button['rect'], fill=colors['buttons']['default'])
+
+        def on_tile_hover(event):
+            # Calculate the tile indices based on cursor position
+            row = int(event.y / tile_size) - 1
+            col = int(event.x / tile_size) - 1
+
+            # Clear previous green tiles
+            canvas.delete("tile")
+
+            # Check if the indices are within the valid range
+            if row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+                x1 = col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+                canvas.create_rectangle(x1, y1, x2, y2, fill=colors['tiles']['hover'], tags="tile")
+
+        def on_hover(event):
+            on_button_hover(event)
+            on_tile_hover(event)
+
+        canvas.bind("<Motion>", on_hover)
+
+        def on_button_click(event):
+            global current_ship_type, current_ship_engines_coords
+            x = event.x
+            y = event.y
+            ship_type = 5
+            for button in buttons_shiptype:
+                x1, y1, x2, y2 = button['coordinates']
+                if x > x1 and x < x2 and y > y1 and y < y2:
+                    if buttons_ship[5-ship_type][-1]['value'] == 0:
+                        if button['value'] == 0:
+                            for each in buttons_shiptype:
+                                if each['coordinates'] != button['coordinates'] and each['value'] != -1:
+                                    canvas.itemconfig(each['rect'], fill=colors['buttons']['default'])
+                                    each['value'] = 0
+                            canvas.itemconfig(button['rect'], fill=colors['buttons']['on'])
+                            button['value'] = 1
+                            current_ship_type = ship_type
+                        elif button['value'] == 1:
+                            canvas.itemconfig(button['rect'], fill=colors['buttons']['default'])
+                            button['value'] = 0
+                            current_ship_type = 6
+                ship_type -= 1
+
+        def on_tile_click(event):
+            global current_ship_type, current_ship_engines_coords
+            # Calculate the tile indices based on cursor position
+            row = int(event.y / tile_size) - 1
+            col = int(event.x / tile_size) - 1
+
+            # -------------------------------------------------------------------------------
+            def check_validity(coord):
+                x, y = coord
+                validity = True
+
+                #tikrinama, ar langelis neliecia lentos krastu
+                if x == 0 or x == DIMENSION-1:
+                    return {'validity': False, 'message': 'netinkama vieta: lieciama riba'}
+                elif y == 0 or y == DIMENSION-1:
+                    return {'validity': False, 'message': 'netinkama vieta: lieciama riba'}
+
+                # gretimu langeliu tiesiai ir kryzmai koordinates
+                close = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]
+                cross = [[x-1, y-1], [x+1, y+1], [x-1, y+1], [x+1, y-1]]
+
+                touching = []
+                for coordinate in current_ship_engines_coords:     # kiekvienai koordinatei statomo laivo sarase
+                    if coordinate in close:                             # jei koordinate yra gretima tiesiai
+                        touching.append(1)
+                    else:
+                        touching.append(0)
+
+                if sum(touching) == 0:                                  # jei nera nei vienos koordinates, gretimos tiesiai
+                                                                        # ir jei tai nera pirmasis statomo laivo variklis
+                                                                        # ir jei tai nera kito variklio atsaukimas
+                    if len(current_ship_engines_coords) != 0 and [row, col] not in current_ship_engines_coords:
+                        return {'validity': False, 'message': 'netinkama vieta: nelieciamas kitas laivo motoras'}
+
+                for coordinate in other_coords:                    # kiekvienai koordinatei kitu laivu uzimtose koordinatese
+                    if coordinate in close+cross:                       # jei koordinate yra gretima tiesiai arba kryzmai statomo laivo koordinatei
+                        return {'validity': False, 'message': 'netinkama vieta: lieciamas kitas laivas'}
+                return {'validity': validity, 'message': 'OK'}          # jei nei vienas saugiklis nesuveikia, grazinamas signalas OK    *******
+            # -------------------------------------------------------------------------------
+
+            # jei laivo tipas nera nustatytas, vartotojas informuojamas
+
+            if current_ship_type == 6 and row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+                button = create_button(SIZE/2, SIZE/2, text='Nustatykite laivo tipa', fontsize=20, remove_after=1000)
+                canvas.delete(button)
+
+            # kitu atveju, jeigu yra paspausta ant lentos
+            elif row >= 0 and row < DIMENSION and col >= 0 and col < DIMENSION:
+                # tikrinama koorinates (vykdoma funkcija check_validity)
+                validity = check_validity([row, col])
+                # jei langelis yra negalimas, vartotojas informuojamas (zinute, kodel langelis negalimas)
+                if validity['validity'] is False:
+                    create_button(SIZE/2, SIZE/2, text=validity['message'], fontsize=20, remove_after=1000)
+                # kitu atveju, jeigu langelis yra galimas
                 else:
-                    canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
-                    visible_board_for_me[row][col] = value
-                    my_score += 1
-                    print('my score: ' + str(my_score) + '/' + str(total))
-            canvas.after(500, opponents_guess())
+                    x1 = col * tile_size + tile_size
+                    y1 = row * tile_size + tile_size
+                    x2 = x1 + tile_size
+                    y2 = y1 + tile_size
 
-    canvas.bind("<Motion>", on_hover)
-    canvas.bind("<Button-1>", on_click)
+                    # jeigu langelis dar nera uzimtas, jis pazymimas, o koordinates pridedamos prie pradeto statyti laivo
+                    if matrix[row, col] == 0:
+                        canvas.create_rectangle(x1, y1, x2, y2, fill=colors['tiles']['clicked'])
+                        matrix[row, col] = 1
+                        current_ship_engines_coords.append([row, col])
+                        current_ship_status = round(len(current_ship_engines_coords) / current_ship_type, 2)
 
-playground(canvas)
+                        # jeigu pazymejus langeli buvo baigtas statyti laivas:
+                        if current_ship_status == 1:
+                            # visi statomo laivo langeliai lentoje pazymimi fiksuoto laivo spalvomis
+                            for coord in current_ship_engines_coords:
+                                row, col = coord
+                                x1 = col * tile_size + tile_size
+                                y1 = row * tile_size + tile_size
+                                x2 = x1 + tile_size
+                                y2 = y1 + tile_size
+                                canvas.create_rectangle(x1, y1, x2, y2, fill=colors['tiles']['ship'])
+                                matrix[row, col] = current_ship_type
+                            # statomo laivo koordinates pridedamos prie anksciau statytu laivu koordinaciu saraso
+                            for coord in current_ship_engines_coords:
+                                other_coords.append(coord)
+                            # vykdoma funkcija add_ship: laivo koordinates pridedamos prie atitinkamo saraso pagal tipa ir pazymimas kvadratelis
+                            add_ship(current_ship_engines_coords)
+                            # statomo laivo koordinates ir jo statusas anuliuojami
+                            current_ship_engines_coords = []
+                            current_ship_status = 0
+
+                            # sekantis iki tol nepazymetas kvadratelis igauna reiksme 1
+                            for button in buttons_ship[5 - current_ship_type]:
+                                if button['value'] == 0:
+                                    button['value'] = 1
+                                    break
+
+                            # jei visi to tipo laivai pastatyti:
+                            #   - vartotojas informuojamas
+                            #   - langelis atzymimas (spalva) ir igauna reiksme -1
+                            if buttons_ship[5 - current_ship_type][-1]['value'] == 1:
+                                button = buttons_shiptype[5 - current_ship_type]
+                                rect = button['rect']
+                                canvas.itemconfig(rect, fill=colors['buttons']['default'])
+                                current_ship_type = 6
+                                button['value'] = -1
+
+                                # tikrinama, ar dar ne visi laivai yra pastatyti
+                                all_ships_are_built = []
+                                for every in buttons_shiptype:
+                                    all_ships_are_built.append(every['value'])
+                                if 0 not in all_ships_are_built:
+                                    print('###################')
+                                    print('ALL SHIPS ARE BUILT')
+                                    print('###################')
+                                    canvas.delete('all')
+
+                                    my_board = np.zeros((DIMENSION, DIMENSION), dtype=int)
+
+                                    for ship_type in ship_coords:
+                                        value = len(ship_type[0])
+                                        for ship in ship_type:
+                                            for engine in ship:
+                                                row, col = engine
+                                                my_board[row][col] = value
+
+                                    playground(canvas, my_board)
+
+                    # jei langelis yra uzimtas
+                    elif matrix[row, col] == 1:
+                        # **************************
+                                    # tikrinimas, ar galima atsaukti langeli
+
+                        def count_components(coords):
+                            def is_close(x, y, coords):
+                                close = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]
+                                return [item for item in coords if item in close]
+
+                            def counting_components(coords):
+                                def funct(coord, coords, tried):
+                                    x, y = coord
+                                    close_ones = is_close(x, y, coords)
+                                    for close_one in close_ones:
+                                        if close_one not in tried:
+                                            tried.append(close_one)
+                                            funct(close_one, coords, tried)
+
+                                components = 0
+                                tried = []
+
+                                for coord in coords:
+                                    if coord not in tried:
+                                        tried.append(coord)
+                                        funct(coord, coords, tried)
+                                        components += 1
+
+                                return components
+
+                            return counting_components(coords)
+
+                        coords = current_ship_engines_coords[:]
+
+                        # koordinates bandomasis pasalinimas
+                        for coord in coords:
+                            if coord == [row, col]:
+                                coords.remove(coord)
+                        components = count_components(coords)
+
+                        if components == 1 or len(coords) == 0:
+                            validity_to_remove = True
+                        else:
+                            validity_to_remove = False
+
+                        # **************************
+                        if validity_to_remove is True:
+                            for coord in current_ship_engines_coords:
+                                if coord == [row, col]:
+                                    current_ship_engines_coords.remove(coord)
+                            canvas.create_rectangle(x1, y1, x2, y2, fill=colors['tiles']['default'])
+                            matrix[row, col] = 0
+                            current_ship_status = round(len(current_ship_engines_coords) / current_ship_type, 2)
+                        else:
+                            print('coordinate cannot be removed, as it would corrupt ships integrity')
+                        # ************************
+
+                    else:
+                        create_button(SIZE/2, SIZE/2, text='Vieta negalima', fontsize=20, remove_after=1000)
+
+        def on_click(event):
+            on_tile_click(event)
+            on_button_click(event)
+
+        canvas.bind("<Button-1>", on_click)
+
+    def create_board():
+        main_board()
+        info_board()
+        bind()
+    create_board()
+
+
+result = assembly()
 window.mainloop()
