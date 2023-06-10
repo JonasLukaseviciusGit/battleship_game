@@ -1,0 +1,134 @@
+from board_generator import make_board
+import tkinter as tk
+import numpy as np
+import random
+
+SIZE = 700
+TOTAL_SIZE = 1000
+dimension = 20
+
+window = tk.Tk()
+canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
+canvas.pack()
+
+my_board = make_board()
+opponent_board = make_board()
+
+
+def playground(canvas):
+    global my_score, opponent_score
+    dimension = 20
+
+    visible_board = np.zeros((dimension, dimension), dtype=int)                                       # speliojimo algoritmui zymetis
+    coordinates_not_tried = [[row, col] for row in range(dimension) for col in range(dimension)]      # speliojimo algoritmui
+    current_ship_coordinates = []
+    current_ship_type = None
+
+    total = 35
+    my_score = 0
+    opponent_score = 0
+
+    size = TOTAL_SIZE / 2
+    tile_size = size / dimension * 0.95
+
+    def creating_board_graphics():
+        canvas.create_line(TOTAL_SIZE/2, 0, TOTAL_SIZE/2, size, fill='black', width=2)     # vidurine vertikale
+        canvas.create_line(3, 0, 3, size, fill='black', width=2)                           # kaire vertikale
+        canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, size, fill='black', width=2)         # desine vertikale
+        canvas.create_line(0, 3, TOTAL_SIZE, 3, fill='black', width=2)                     # virsutine horizontale
+        canvas.create_line(0, size, TOTAL_SIZE, size, fill='black', width=2)               # apatine horizontale
+
+        # Zaidejo ir oponento lentu zymes
+        canvas.create_rectangle(size/2-100, size+5, size/2+100, size+35, fill='ivory')
+        canvas.create_text(size/2, size+20, text="opponent's board", font=15)
+        canvas.create_rectangle(size + size / 2 - 100, size+5, size + size / 2 + 100, size + 35, fill='ivory')
+        canvas.create_text(size + size/2, size + 20, text="your board", font=15)
+
+        def little_board(xx):
+            for row in range(dimension):
+                for col in range(dimension):
+                    x1 = xx + col * tile_size + tile_size
+                    y1 = row * tile_size + tile_size
+                    x2 = x1 + tile_size
+                    y2 = y1 + tile_size
+
+                    canvas.create_rectangle(x1, y1, x2, y2, fill='white')
+
+                    canvas.create_line(x1, y1, x1, y2, fill="black")
+                    canvas.create_line(x1, y1, x2, y1, fill="black")
+
+                for row in range(dimension):
+                    x = xx + tile_size * 0.5
+                    y = row * tile_size + tile_size * 1.5
+                    canvas.create_text(x, y, text=str(row), anchor="center")
+
+                for col in range(dimension):
+                    x = xx + col * tile_size + tile_size * 1.5
+                    y = tile_size * 0.5
+                    canvas.create_text(x, y, text=str(col), anchor="center")
+
+        little_board(0)
+        little_board(size)
+
+        def mark_the_board(board, xx=None):
+            for row in range(dimension):
+                for col in range(dimension):
+                    x1 = xx + col * tile_size + tile_size
+                    y1 = row * tile_size + tile_size
+                    x2 = x1 + tile_size
+                    y2 = y1 + tile_size
+
+                    colors = ['firebrick1', 'Turquoise2', 'aquamarine4', 'OliveDrab2', 'purple1']
+                    value = board[row][col]
+                    if value != 0:
+                        canvas.create_rectangle(x1, y1, x2, y2, fill=colors[value - 1])
+        mark_the_board(my_board, xx=size)
+    creating_board_graphics()
+
+    def on_hover(event):
+        # Calculate the tile indices based on cursor position
+        row = int(event.y / tile_size) - 1
+        col = int(event.x / tile_size) - 1
+
+        #print(f'size: {int(size)}; row: {row}; col {col}')
+
+        # Clear previous green tiles
+        canvas.delete("tile")
+
+        # Check if the indices are within the valid range
+        if row >= 0 and row < dimension and col >= 0 and col < dimension:
+            x1 = col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+            canvas.create_rectangle(x1, y1, x2, y2, fill='khaki2', tags="tile")
+
+    def on_click(event):
+        global my_score
+        # Calculate the tile indices based on cursor position
+        row = int(event.y / tile_size) - 1
+        col = int(event.x / tile_size) - 1
+
+        # Check if the indices are within the valid range
+        if row >= 0 and row < dimension and col >= 0 and col < dimension:
+            x1 = col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+
+            if visible_board[row][col] == 0:
+                value = opponent_board[row][col]
+                if value == 0:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
+                    opponent_board[row][col] = -1
+                else:
+                    canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
+                    visible_board[row][col] = value
+                    my_score += 1
+                    print('my score: ' + str(my_score) + '/' + str(total))
+
+    canvas.bind("<Motion>", on_hover)
+    canvas.bind("<Button-1>", on_click)
+
+playground(canvas)
+window.mainloop()
