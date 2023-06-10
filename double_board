@@ -4,18 +4,14 @@ import numpy as np
 
 SIZE = 700
 TOTAL_SIZE = 1000
-ships = [
-    [[17, 15]],
-    [[5, 7], [5, 8], [6, 8]],
-    [[3, 2], [3, 3], [4, 3], [4, 4], [5, 4]]
-]
-
-window = tk.Tk()
-canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
-canvas.pack()
 
 
-def playground():
+#window = tk.Tk()
+#canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
+#canvas.pack()
+
+
+def playground(canvas):
     global score
     score = 0
 
@@ -130,6 +126,6 @@ def playground():
     canvas.bind("<Motion>", on_hover)
     canvas.bind("<Button-1>", on_click)
 
-playground()
+#playground()
 
-window.mainloop()
+#window.mainloop()
