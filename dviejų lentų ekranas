@@ -16,6 +16,7 @@ canvas.pack()
 
 
 def playground():
+    global score
     score = 0
 
     total = 35
@@ -103,6 +104,7 @@ def playground():
             canvas.create_rectangle(x1, y1, x2, y2, fill='khaki2', tags="tile")
 
     def on_click(event):
+        global score
         # Calculate the tile indices based on cursor position
         row = int(event.y / tile_size) - 1
         col = int(event.x / tile_size) - 1
@@ -115,7 +117,7 @@ def playground():
             y2 = y1 + tile_size
 
             value = board_opponent_real[row][col]
-            if board_oponent_visible[row][col] == 0:
+            if board_opponent_visible[row][col] == 0:
                 if value == 0:
                     canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
                     board_opponent_visible[row][col] = -1
