@@ -14,7 +14,12 @@ window = tk.Tk()
 canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
 canvas.pack()
 
+
 def playground():
+    score = 0
+
+    total = 35
+
     dimension = 20
     size = TOTAL_SIZE/2
     tile_size = size / dimension * 0.95
@@ -70,20 +75,27 @@ def playground():
                 if value != 0:
                     canvas.create_rectangle(x1, y1, x2, y2, fill=colors[value-1])
 
-    # zaidejo lenta (veliau pakeisti realia, o ne sugeneruota)
+    # zaidejo lenta
     board_my = make_board()
-    mark_the_board(xx=size, board=board_my)
+
+    # oponento lentos - reali (sugeneruota) ir matoma (pradzioje nuline)
+    board_opponent_real = make_board()
+    board_opponent_visible = np.zeros((dimension, dimension), dtype=int)
+
+    print(board_opponent_real)
 
     def on_hover(event):
         # Calculate the tile indices based on cursor position
         row = int(event.y / tile_size) - 1
         col = int(event.x / tile_size) - 1
 
+        #print(f'size: {int(size)}; row: {row}; col {col}')
+
         # Clear previous green tiles
         canvas.delete("tile")
 
         # Check if the indices are within the valid range
-        if row >= 0 and row < size and col >= 0 and col < size:
+        if row >= 0 and row < dimension and col >= 0 and col < dimension:
             x1 = col * tile_size + tile_size
             y1 = row * tile_size + tile_size
             x2 = x1 + tile_size
@@ -96,24 +108,25 @@ def playground():
         col = int(event.x / tile_size) - 1
 
         # Check if the indices are within the valid range
-        if row >= 0 and row < size and col >= 0 and col < size:
+        if row >= 0 and row < dimension and col >= 0 and col < dimension:
             x1 = col * tile_size + tile_size
             y1 = row * tile_size + tile_size
             x2 = x1 + tile_size
             y2 = y1 + tile_size
 
             value = board_opponent_real[row][col]
-            if value == 0:
-                canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
-            else:
-                canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
+            if board_oponent_visible[row][col] == 0:
+                if value == 0:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
+                    board_opponent_visible[row][col] = -1
+                else:
+                    canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
+                    board_opponent_visible[row][col] = value
+                    score += 1
+                    print(str(score) + '/' + str(total))
 
     canvas.bind("<Motion>", on_hover)
     canvas.bind("<Button-1>", on_click)
-
-    # oponento lentos - reali (sugeneruota) ir matoma (pradzioje nuline)
-    board_opponent_real = make_board()
-    board_opponent_visible = np.zeros((dimension, dimension), dtype=int)
 
 playground()
 
