@@ -14,13 +14,20 @@ canvas.pack()
 my_board = make_board()
 opponent_board = make_board()
 
+# ######################################
+print('opponent_board')
+print(opponent_board)
+print('my_board')
+print(my_board)
+
 
 def playground(canvas):
     global my_score, opponent_score
     global current_ship_coordinates, current_ship_type
     dimension = 20
 
-    visible_board = np.zeros((dimension, dimension), dtype=int)                                       # speliojimo algoritmui zymetis
+    visible_board_for_me = np.zeros((dimension, dimension), dtype=int)
+    visible_board_for_opponent = np.zeros((dimension, dimension), dtype=int)  # speliojimo algoritmui zymetis
     coordinates_not_tried = [[row, col] for row in range(dimension) for col in range(dimension)]      # speliojimo algoritmui
     current_ship_coordinates = []
     current_ship_type = None
@@ -112,9 +119,9 @@ def playground(canvas):
             global current_ship_coordinates, my_score
             x, y = coordinate
             if my_board[x][y] == 0:
-                visible_board[x][y] = -1
+                visible_board_for_opponent[x][y] = -1
             else:
-                visible_board[x][y] = my_board[x][y]
+                visible_board_for_opponent[x][y] = my_board[x][y]
                 current_ship_coordinates.append(coordinate)
                 my_score += 1
             coordinates_not_tried.remove(coordinate)
@@ -170,14 +177,14 @@ def playground(canvas):
             x2 = x1 + tile_size
             y2 = y1 + tile_size
 
-            if visible_board[row][col] == 0:
+            if visible_board_for_me[row][col] == 0:
                 value = opponent_board[row][col]
                 if value == 0:
                     canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
-                    opponent_board[row][col] = -1
+                    visible_board_for_me[row][col] = -1
                 else:
                     canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
-                    visible_board[row][col] = value
+                    visible_board_for_me[row][col] = value
                     my_score += 1
                     print('my score: ' + str(my_score) + '/' + str(total))
             canvas.after(500, opponents_guess())
