@@ -4,6 +4,11 @@ import numpy as np
 
 SIZE = 700
 TOTAL_SIZE = 1000
+ships = [
+    [[17, 15]],
+    [[5, 7], [5, 8], [6, 8]],
+    [[3, 2], [3, 3], [4, 3], [4, 4], [5, 4]]
+]
 
 window = tk.Tk()
 canvas = tk.Canvas(window, height=SIZE, width=TOTAL_SIZE)
@@ -14,11 +19,18 @@ def playground():
     size = TOTAL_SIZE/2
     tile_size = size / dimension * 0.95
 
+    # Linijos
     canvas.create_line(TOTAL_SIZE/2, 0, TOTAL_SIZE/2, size, fill='black', width=2)     # vidurine vertikale
     canvas.create_line(3, 0, 3, size, fill='black', width=2)                           # kaire vertikale
     canvas.create_line(TOTAL_SIZE, 0, TOTAL_SIZE, size, fill='black', width=2)         # desine vertikale
     canvas.create_line(0, 3, TOTAL_SIZE, 3, fill='black', width=2)                     # virsutine horizontale
     canvas.create_line(0, size, TOTAL_SIZE, size, fill='black', width=2)               # apatine horizontale
+
+    # Zaidejo ir oponento lentu zymes
+    canvas.create_rectangle(size/2-100, size+5, size/2+100, size+35, fill='ivory')
+    canvas.create_text(size/2, size+20, text="opponent's board", font=15)
+    canvas.create_rectangle(size + size / 2 - 100, size+5, size + size / 2 + 100, size + 35, fill='ivory')
+    canvas.create_text(size + size/2, size + 20, text="your board", font=15)
 
     def little_board(xx):
         for row in range(dimension):
@@ -44,6 +56,64 @@ def playground():
                 canvas.create_text(x, y, text=str(col), anchor="center")
     little_board(0)
     little_board(size)
+
+    def mark_the_board(board, xx=None):
+        for row in range(dimension):
+            for col in range(dimension):
+                x1 = xx + col * tile_size + tile_size
+                y1 = row * tile_size + tile_size
+                x2 = x1 + tile_size
+                y2 = y1 + tile_size
+
+                colors = ['firebrick1', 'Turquoise2', 'aquamarine4', 'OliveDrab2', 'purple1']
+                value = board[row][col]
+                if value != 0:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill=colors[value-1])
+
+    # zaidejo lenta (veliau pakeisti realia, o ne sugeneruota)
+    board_my = make_board()
+    mark_the_board(xx=size, board=board_my)
+
+    def on_hover(event):
+        # Calculate the tile indices based on cursor position
+        row = int(event.y / tile_size) - 1
+        col = int(event.x / tile_size) - 1
+
+        # Clear previous green tiles
+        canvas.delete("tile")
+
+        # Check if the indices are within the valid range
+        if row >= 0 and row < size and col >= 0 and col < size:
+            x1 = col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+            canvas.create_rectangle(x1, y1, x2, y2, fill='khaki2', tags="tile")
+
+    def on_click(event):
+        # Calculate the tile indices based on cursor position
+        row = int(event.y / tile_size) - 1
+        col = int(event.x / tile_size) - 1
+
+        # Check if the indices are within the valid range
+        if row >= 0 and row < size and col >= 0 and col < size:
+            x1 = col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+
+            value = board_opponent_real[row][col]
+            if value == 0:
+                canvas.create_rectangle(x1, y1, x2, y2, fill='pale green')
+            else:
+                canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
+
+    canvas.bind("<Motion>", on_hover)
+    canvas.bind("<Button-1>", on_click)
+
+    # oponento lentos - reali (sugeneruota) ir matoma (pradzioje nuline)
+    board_opponent_real = make_board()
+    board_opponent_visible = np.zeros((dimension, dimension), dtype=int)
 
 playground()
 
