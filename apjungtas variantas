@@ -329,7 +329,29 @@ def assembly():
                                     print('###################')
                                     print('ALL SHIPS ARE BUILT')
                                     print('###################')
-                                    result = ship_coords
+
+                                    def the_end():
+                                        def create_end_button():
+                                            end_button_coordinates = [SIZE / 2 - 100, SIZE / 2 - 25,
+                                                                      SIZE / 2 + 100, SIZE / 2 + 25]
+                                            x1, y1, x2, y2 = end_button_coordinates
+                                            rect = canvas.create_rectangle(x1, y1, x2, y2, fill='ivory')
+                                            canvas.create_text(SIZE / 2, SIZE / 2, text='START THE GAME', font=20)
+                                            return end_button_coordinates
+
+                                        end_button_coordinates = create_end_button()
+
+                                        def on_end_click(event):
+                                            x1, y1, x2, y2 = end_button_coordinates
+                                            x = event.x
+                                            y = event.y
+                                            if x > x1 and x < x2 and y > y1 and y < y2:
+                                                canvas.delete('all')
+                                                sys.exit()
+
+                                        canvas.bind("<Button-1>", on_end_click)
+
+                                    the_end()
 
                     # jei langelis yra uzimtas
                     elif matrix[row, col] == 1:
@@ -402,10 +424,7 @@ def assembly():
         info_board()
         bind()
     create_board()
-    return result
 
 
 result = assembly()
-print(result)
-
 window.mainloop()
