@@ -17,6 +17,7 @@ opponent_board = make_board()
 
 def playground(canvas):
     global my_score, opponent_score
+    global current_ship_coordinates, current_ship_type
     dimension = 20
 
     visible_board = np.zeros((dimension, dimension), dtype=int)                                       # speliojimo algoritmui zymetis
@@ -103,11 +104,64 @@ def playground(canvas):
             y2 = y1 + tile_size
             canvas.create_rectangle(x1, y1, x2, y2, fill='khaki2', tags="tile")
 
+    def make_a_guess():
+        global current_ship_coordinates, coordinate
+        coordinate = None
+
+        def action(coordinate):
+            global current_ship_coordinates, my_score
+            x, y = coordinate
+            if my_board[x][y] == 0:
+                visible_board[x][y] = -1
+            else:
+                visible_board[x][y] = my_board[x][y]
+                current_ship_coordinates.append(coordinate)
+                my_score += 1
+            coordinates_not_tried.remove(coordinate)
+            return coordinate
+
+        if len(current_ship_coordinates) == 0:
+            coordinate = random.choice(coordinates_not_tried)
+            coordinate = action(coordinate)
+        else:
+            x, y = current_ship_coordinates[0]
+            value = my_board[x][y]
+            if len(current_ship_coordinates) == 1 and value == 1:
+                current_ship_coordinates = []
+                coordinate = random.choice(coordinates_not_tried)
+                coordinate = action(coordinate)
+            elif len(current_ship_coordinates) == value:
+                print('visi motorai pasauti')
+                current_ship_coordinates = []
+                coordinate = random.choice(coordinates_not_tried)
+                coordinate = action(coordinate)
+            else:
+                potential = []
+                for coordinate in current_ship_coordinates:
+                    x, y = coordinate
+                    close = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
+                    for close_one in close:
+                        if close_one not in current_ship_coordinates:
+                            if close_one in coordinates_not_tried:
+                                potential.append(close_one)
+                print('potential: ' + str(potential))
+                coordinate = random.choice(potential)
+                coordinate = action(coordinate)
+        return coordinate
+
     def on_click(event):
-        global my_score
+        global my_score, current_ship_coordinates
         # Calculate the tile indices based on cursor position
         row = int(event.y / tile_size) - 1
         col = int(event.x / tile_size) - 1
+
+        def opponents_guess():
+            row, col = make_a_guess()
+            x1 = size + col * tile_size + tile_size
+            y1 = row * tile_size + tile_size
+            x2 = x1 + tile_size
+            y2 = y1 + tile_size
+            canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', font=15, text='X')
 
         # Check if the indices are within the valid range
         if row >= 0 and row < dimension and col >= 0 and col < dimension:
@@ -126,6 +180,7 @@ def playground(canvas):
                     visible_board[row][col] = value
                     my_score += 1
                     print('my score: ' + str(my_score) + '/' + str(total))
+            canvas.after(500, opponents_guess())
 
     canvas.bind("<Motion>", on_hover)
     canvas.bind("<Button-1>", on_click)
