@@ -20,34 +20,22 @@ window.title("Battleships")
 canvas = tk.Canvas(window, width=TOTAL_SIZE, height=SIZE)
 canvas.pack()
 
-def start_screen():
-    def screen():
-        global canvas
 
-        image_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\battleship_photo_1.jpg"
+def screen():
+    global canvas
 
-        image = Image.open(image_path)
-        image = image.resize((1000, 700))
+    #image_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\battleship_photo_1.jpg"
+    image_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\battleship_photo_2.png"
 
-        tk_image = ImageTk.PhotoImage(image)
+    image = Image.open(image_path)
+    image = image.resize((1000, 700))
 
-        canvas.image = tk_image
+    tk_image = ImageTk.PhotoImage(image)
 
-        image_item = canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
+    canvas.image = tk_image
 
-
-    def display_text():
-        text_item = canvas.create_text(500, 350, text='B a t t l e s h i p', font=('castellar', 70), fill='black')
-
-    def delete_text(text):
-        canvas.delete(text)
-
-    display_text()
-
-    screen()
-
-
-start_screen()
+    image_item = canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
+screen()
 
 
 def play_sound(file_path, duration):
@@ -473,8 +461,8 @@ def assembly():
         canvas.create_line(SIZE, tile_size / 10, TOTAL_SIZE, tile_size / 10, fill="black", width=2)
         canvas.create_line(SIZE, SIZE, TOTAL_SIZE, SIZE, fill="black", width=2)
 
-        canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12),
-                           justify="center")
+        canvas.create_text(((SIZE + TOTAL_SIZE) / 2), (tile_size / 2), text="YOUR SHIPS", font=("Arial", 12, 'bold'),
+                           justify="center", fill='black')
 
         laivai = ['penkiamotoriai', 'keturmotoriai', 'trimotoriai', 'dvimotoriai', 'vienmotoriai']
         vieta_tekstui = 125
@@ -670,7 +658,7 @@ def assembly():
                                     print('ALL SHIPS ARE BUILT')
                                     print('###################')
                                     canvas.delete('all')
-                                    start_screen()
+                                    screen()
 
                                     my_board = np.zeros((DIMENSION, DIMENSION), dtype=int)
 
