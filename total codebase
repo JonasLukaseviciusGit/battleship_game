@@ -35,8 +35,7 @@ def screen():
     canvas.image = tk_image
 
     image_item = canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
-screen()
-
+#screen()
 
 def play_sound(file_path, duration):
     chunk = 1024
@@ -75,9 +74,11 @@ def play_sound(file_path, duration):
         print("Error playing sound:", str(e))
 
 
-def click():
-    file_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\click3-louder1.wav"
-    play_sound(file_path, 0.1)
+#def click():
+    #file_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\click3-louder1.wav"
+    #play_sound(file_path, 0.1)
+def click():                    # nuimtas laikinai, kad nelagintu
+    pass
 
 
 def explosion():
@@ -744,5 +745,34 @@ def assembly():
     create_board()
 
 
-result = assembly()
+def start_screen():
+    def screen():
+        global canvas
+
+        image_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\battleship_photo_1.jpg"
+
+        image = Image.open(image_path)
+        image = image.resize((1000, 700))
+
+        tk_image = ImageTk.PhotoImage(image)
+
+        canvas.image = tk_image
+
+        image_item = canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
+
+
+    def display_text():
+        text_item = canvas.create_text(500, 350, text='B a t t l e s h i p', font=('castellar', 70), fill='white', tags='start_text')
+
+    def remove_text():
+        canvas.delete('start_text')
+
+    window.after(1000, display_text)
+    window.after(2500, remove_text)
+
+    screen()
+start_screen()
+
+canvas.after(2500, screen)
+canvas.after(2500, assembly)
 window.mainloop()
