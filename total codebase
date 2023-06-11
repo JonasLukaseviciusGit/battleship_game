@@ -3,6 +3,10 @@ from tkinter.font import Font
 import numpy as np
 import random
 from random import randint
+import pyaudio
+import wave
+import threading
+import time
 
 SIZE = 700
 DIMENSION = 20
@@ -10,10 +14,56 @@ DIMENSION = 20
 TOTAL_SIZE = 1000
 
 window = tk.Tk()
-window.title("Tiled Board")
+window.title("Battleships")
 
 canvas = tk.Canvas(window, width=TOTAL_SIZE, height=SIZE)
 canvas.pack()
+
+
+def play_sound(file_path, duration):
+    chunk = 1024
+
+    try:
+        # Open the sound file
+        wf = wave.open(file_path, 'rb')
+
+        # Initialize PyAudio
+        audio = pyaudio.PyAudio()
+
+        # Open a stream
+        stream = audio.open(format=audio.get_format_from_width(wf.getsampwidth()),
+                            channels=wf.getnchannels(),
+                            rate=wf.getframerate(),
+                            output=True)
+
+        def play():
+            # Read data from the file and play it in chunks
+            data = wf.readframes(chunk)
+            start_time = time.time()
+            while data and time.time() - start_time < duration:
+                stream.write(data)
+                data = wf.readframes(chunk)
+
+            # Cleanup
+            stream.stop_stream()
+            stream.close()
+            audio.terminate()
+
+        # Create a new thread for sound playback
+        thread = threading.Thread(target=play)
+        thread.start()
+
+    except IOError as e:
+        print("Error playing sound:", str(e))
+
+def click():
+    file_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\click3-louder1.wav"
+    play_sound(file_path, 0.1)
+
+def explosion():
+    file_path = r"C:\Users\HP\Documents\PROGRAMAVIMAS\battleship_game\bomb1.wav"
+    play_sound(file_path, 1)
+
 
 def make_board():
     DIMENSION = 20
@@ -226,6 +276,7 @@ def playground(canvas, my_board):
         return coordinate
 
     def on_click(event):
+        click()
         global my_score, current_ship_coordinates
         # Calculate the tile indices based on cursor position
         row = int(event.y / tile_size) - 1
@@ -255,6 +306,7 @@ def playground(canvas, my_board):
                     canvas.create_text((x1+x2)/2, (y1+y2)/2, anchor='center', text=str(value), font=15)
                     visible_board_for_me[row][col] = value
                     my_score += 1
+                    explosion()
                     print('my score: ' + str(my_score) + '/' + str(total))
             canvas.after(100, opponents_guess())                                # delsiklis
 
@@ -474,6 +526,7 @@ def assembly():
                 ship_type -= 1
 
         def on_tile_click(event):
+            click()
             global current_ship_type, current_ship_engines_coords
             # Calculate the tile indices based on cursor position
             row = int(event.y / tile_size) - 1
